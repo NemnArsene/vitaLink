@@ -1,0 +1,49 @@
+# ============================================================================
+# Docker Compose — Production Override
+# ============================================================================
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    environment:
+      - NODE_ENV=production
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  mongodb:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    command: mongod --auth --setParameter enableLocalhostAuthBypass=false
+
+  redis:
+    command: redis-server --requirepass password --maxmemory 1gb --maxmemory-policy allkeys-lru --appendonly yes
+
+  rabbitmq:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M

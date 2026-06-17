@@ -1,0 +1,97 @@
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
+import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule, {
+    cors: true,
+  });
+
+  const configService = app.get<ConfigService>(ConfigService);
+  const port = parseInt(configService.get('PORT', '3001'), 10);
+  const apiPrefix = configService.get('API_PREFIX', 'api/v1');
+
+  // Security middleware
+  app.use(helmet());
+
+  // Global prefix and versioning
+  app.setGlobalPrefix(apiPrefix);
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+    prefix: 'v',
+  });
+
+  // Global pipes
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
+
+  // Global filters
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  // Global interceptors
+  app.useGlobalInterceptors(new TransformInterceptor());
+
+  // CORS configuration
+  app.enableCors({
+    origin: configService.get('CORS_ORIGIN', '*'),
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
+  });
+
+  // Swagger documentation
+  if (configService.get('SWAGGER_ENABLED', 'true') === 'true') {
+    const config = new DocumentBuilder()
+      .setTitle('VitaLink HMS API')
+      .setDescription(
+        'Hospital Management System API - VitaLink Platform\n\n' +
+          'Manages hospital operations including patient records, billing, eligibility checks, and gateway integration.',
+      )
+      .setVersion('1.0.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Enter JWT token',
+        },
+        'access-token',
+      )
+      .addTag('Patients', 'Patient Records Management')
+      .addTag('Billing', 'Medical Billing & Invoicing')
+      .addTag('Eligibility', 'Insurance Coverage Verification')
+      .addTag('Webhooks', 'Gateway Webhook Endpoints')
+      .addServer('http://localhost:3001', 'Local Development')
+      .build();
+
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+        docExpansion: 'none',
+        filter: true,
+        showRequestDuration: true,
+      },
+    });
+  }
+
+  await app.listen(port);
+  console.log(`🏥 VitaLink HMS API running on port ${port}`);
+  console.log(`📚 Swagger docs: http://localhost:${port}/docs`);
+}
+
+bootstrap();

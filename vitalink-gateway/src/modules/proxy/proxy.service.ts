@@ -1,0 +1,118 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
+import * as jwt from 'jsonwebtoken';
+
+export interface ProxyOptions {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  path: string;
+  body?: any;
+  params?: Record<string, string>;
+  headers?: Record<string, string>;
+  scope?: string;
+}
+
+@Injectable()
+export class ProxyService {
+  private readonly logger = new Logger(ProxyService.name);
+  private readonly hmsApiUrl: string;
+  private readonly imsApiUrl: string;
+  private readonly jwtSecret: string;
+
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    this.hmsApiUrl = this.configService.get('app.hmsApiUrl', 'http://localhost:3001');
+    this.imsApiUrl = this.configService.get('app.imsApiUrl', 'http://localhost:3002');
+    this.jwtSecret = this.configService.get('app.serviceJwtSecret', 'shared-jwt-secret');
+  }
+
+  private generateServiceToken(scope: string): string {
+    const isHospital = scope === 'scope:hospital';
+    return jwt.sign(
+      {
+        sub: isHospital ? 'hms-service' : 'ims-service',
+        email: isHospital ? 'hms@vitalink.com' : 'ims@vitalink.com',
+        role: 'service',
+        scope,
+        entityId: isHospital ? 'hms-001' : 'ims-001',
+        entityType: isHospital ? 'hospital' : 'insurance',
+        permissions: isHospital
+          ? ['patients:read', 'patients:write', 'billing:read', 'billing:write', 'eligibility:read']
+          : ['policies:read', 'policies:write', 'claims:read', 'claims:write'],
+      },
+      this.jwtSecret,
+      { expiresIn: '1h' },
+    );
+  }
+
+  private getBaseUrl(target: 'hms' | 'ims'): string {
+    return target === 'hms' ? this.hmsApiUrl : this.imsApiUrl;
+  }
+
+  async forwardRequest(target: 'hms' | 'ims', options: ProxyOptions): Promise<any> {
+    const baseUrl = this.getBaseUrl(target);
+    const token = this.generateServiceToken(options.scope || (target === 'hms' ? 'scope:hospital' : 'scope:insurance'));
+
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      'X-Gateway-Forward': 'true',
+      ...options.headers,
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.request({
+          method: options.method,
+          url: `${baseUrl}${options.path}`,
+          data: options.body,
+          params: options.params,
+          headers,
+        }),
+      );
+
+      return response.data as any;
+    } catch (error) {
+      this.logger.error(
+        `Proxy ${options.method} ${target}${options.path} failed: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  // Convenience methods
+  async getHms(path: string, params?: Record<string, string>) {
+    return this.forwardRequest('hms', { method: 'GET', path, params, scope: 'scope:hospital' });
+  }
+
+  async postHms(path: string, body?: any) {
+    return this.forwardRequest('hms', { method: 'POST', path, body, scope: 'scope:hospital' });
+  }
+
+  async putHms(path: string, body?: any) {
+    return this.forwardRequest('hms', { method: 'PUT', path, body, scope: 'scope:hospital' });
+  }
+
+  async deleteHms(path: string) {
+    return this.forwardRequest('hms', { method: 'DELETE', path, scope: 'scope:hospital' });
+  }
+
+  async getIms(path: string, params?: Record<string, string>) {
+    return this.forwardRequest('ims', { method: 'GET', path, params, scope: 'scope:insurance' });
+  }
+
+  async postIms(path: string, body?: any) {
+    return this.forwardRequest('ims', { method: 'POST', path, body, scope: 'scope:insurance' });
+  }
+
+  async putIms(path: string, body?: any) {
+    return this.forwardRequest('ims', { method: 'PUT', path, body, scope: 'scope:insurance' });
+  }
+
+  async deleteIms(path: string) {
+    return this.forwardRequest('ims', { method: 'DELETE', path, scope: 'scope:insurance' });
+  }
+}
