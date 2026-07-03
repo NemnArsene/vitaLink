@@ -21,11 +21,11 @@ export class ApiController {
 
   @Post('eligibility/check')
   @Scopes(Scope.HOSPITAL, Scope.ADMIN)
-  @ApiOperation({ summary: 'Check insurance eligibility (proxied to HMS) — English alias' })
+  @ApiOperation({ summary: 'Check insurance eligibility (proxied to IMS) — English alias' })
   async checkEligibilityEn(@Req() req: Request, @Body() dto: EligibilityCheckDto) {
-    return this.proxyService.forwardRequest('hms', {
+    return this.proxyService.forwardRequest('ims', {
       method: 'POST',
-      path: '/eligibility/check',
+      path: '/api/v1/eligibility/check',
       body: dto,
       headers: { 'x-request-id': (req.headers['x-request-id'] as string) || '' },
     });
@@ -33,11 +33,11 @@ export class ApiController {
 
   @Post('eligibilite/check')
   @Scopes(Scope.HOSPITAL, Scope.ADMIN)
-  @ApiOperation({ summary: 'Check insurance eligibility (proxied to HMS)' })
+  @ApiOperation({ summary: 'Check insurance eligibility (proxied to IMS)' })
   async checkEligibility(@Req() req: Request, @Body() dto: EligibilityCheckDto) {
-    return this.proxyService.forwardRequest('hms', {
+    return this.proxyService.forwardRequest('ims', {
       method: 'POST',
-      path: '/eligibility/check',
+      path: '/api/v1/eligibility/check',
       body: dto,
       headers: { 'x-request-id': (req.headers['x-request-id'] as string) || '' },
     });

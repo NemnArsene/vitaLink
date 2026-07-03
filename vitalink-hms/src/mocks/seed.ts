@@ -203,11 +203,25 @@ export const USERS: User[] = [
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
 const cities = ["Yaoundé", "Douala", "Bafoussam", "Garoua", "Maroua", "Bamenda", "Limbe", "Kribi"];
 
+const ALLERGIES_POOL = [
+  "Pénicilline", "Arachides", "Fruits de mer", "Latex", "Aspirine",
+  "Pollen", "Iode", "Sulfamides", "Morphine", "Lactose",
+  "Protéines de lait de vache", "Poussière d'acariens", "Poils de chat",
+];
+const ANTECEDENTS_POOL = [
+  "Hypertension artérielle", "Diabète type 2", "Asthme", "Migraine chronique",
+  "Hypercholestérolémie", "Anémie falciforme", "Tuberculose", "Paludisme récurrent",
+  "Insuffisance rénale chronique", "Hépatite B", "Drépanocytose", "Épilepsie",
+  "Dépression", "Arthrose", "Gastrite", "Ulcère gastrique",
+];
+
 export const PATIENTS: Patient[] = Array.from({ length: 85 }, (_, i) => {
   const gender = faker.helpers.arrayElement(["M", "F"]) as "M" | "F";
   const firstName = gender === "M" ? faker.person.firstName("male") : faker.person.firstName("female");
   const lastName = faker.person.lastName();
   const ins = faker.helpers.maybe(() => faker.helpers.arrayElement(INSURANCE_COMPANIES), { probability: 0.7 });
+  const allergies = faker.helpers.arrayElements(ALLERGIES_POOL, { min: 0, max: 3 });
+  const antecedents = faker.helpers.arrayElements(ANTECEDENTS_POOL, { min: 0, max: 4 });
   return {
     id: `pat-${i + 1}`,
     fileNumber: `P-${String(20240000 + i).padStart(8, "0")}`,
@@ -225,6 +239,8 @@ export const PATIENTS: Patient[] = Array.from({ length: 85 }, (_, i) => {
     insuranceNumber: ins ? `INS-${faker.string.numeric(8)}` : undefined,
     emergencyContact: `${faker.person.firstName()} ${faker.person.lastName()}`,
     emergencyPhone: faker.phone.number(),
+    allergies,
+    antecedents,
     status: "ACTIVE",
     createdAt: faker.date.past({ years: 2 }).toISOString(),
     updatedAt: faker.date.recent().toISOString(),

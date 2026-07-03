@@ -39,5 +39,5 @@ export function StatusBadge({ status }: { status: string }) {
     // French statuses for lab
     en_attente: "warning", preleve: "info", en_cours: "primary", termine: "success", valide: "success",
   };
-  return <Badge variant={map[status] || "neutral"} dot>{status.replace(/_/g, " ")}</Badge>;
+  return <Badge variant={map[status] || "neutral"} dot>{(status || "—").replace(/_/g, " ")}</Badge>;
 }

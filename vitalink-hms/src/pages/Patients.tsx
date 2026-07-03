@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, Filter, Upload, Users as UsersIcon } from "lucide-react";
+import { Plus, Filter, Upload, Users as UsersIcon, ShieldCheck, ShieldX, ShieldAlert } from "lucide-react";
 import { PatientsService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -31,10 +31,12 @@ export default function Patients() {
   const [importOpen, setImportOpen] = useState(false);
 
   const { data: patientsRaw = [] } = useQuery({
-    queryKey: ["patients", status, insurance],
-    queryFn: () => PatientsService.list({ status, insurance }),
+    queryKey: ["patients"],
+    queryFn: () => PatientsService.list(),
   });
   const patients = patientsRaw.filter(p => {
+    if (status !== "ALL" && p.status !== status) return false;
+    if (insurance !== "ALL" && p.insuranceCompany !== insurance) return false;
     if (genderFilter !== "ALL" && p.gender !== genderFilter) return false;
     if (cityFilter && !p.city?.toLowerCase().includes(cityFilter.toLowerCase())) return false;
     return true;
@@ -124,7 +126,33 @@ export default function Patients() {
             </div>
           )},
           { key: "phone", label: "Téléphone" },
-          { key: "insuranceCompany", label: "Assurance", render: p => p.insuranceCompany ? <Badge variant="info">{p.insuranceCompany}</Badge> : <span style={{ color: "var(--text-subtle)" }}>—</span> },
+          { key: "insuranceStatus", label: "Couverture", render: p => {
+            const status = p.insuranceStatus;
+            if (status === "ASSURE") return (
+              <div className="flex flex-col gap-0.5">
+                <span className="inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--success)" }}>
+                  <ShieldCheck className="h-3.5 w-3.5" /> Assuré
+                </span>
+                {p.insuranceCoveragePercentage != null && p.insuranceCoveragePercentage > 0 && (
+                  <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>{p.insuranceCompany} · {p.insuranceCoveragePercentage}%</span>
+                )}
+              </div>
+            );
+            if (status === "EN_ATTENTE") return (
+              <span className="inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--warning)" }}>
+                <ShieldAlert className="h-3.5 w-3.5" /> En attente
+              </span>
+            );
+            if (status === "NON_ASSURE") return (
+              <span className="inline-flex items-center gap-1 text-xs" style={{ color: "var(--text-muted)" }}>
+                <ShieldX className="h-3.5 w-3.5" /> Non assuré
+              </span>
+            );
+            // Ancien patient (pas encore de insuranceStatus)
+            return p.insuranceCompany
+              ? <Badge variant="info">{p.insuranceCompany}</Badge>
+              : <span style={{ color: "var(--text-subtle)" }}>—</span>;
+          }},
           { key: "city", label: "Ville" },
           { key: "updatedAt", label: "Mis à jour", sortable: true, render: p => <span className="text-xs" style={{ color: "var(--text-muted)" }}>{formatDate(p.updatedAt)}</span> },
           { key: "status", label: "Statut", render: p => <StatusBadge status={p.status} /> },
@@ -137,13 +165,45 @@ export default function Patients() {
   );
 }
 
-function CreatePatientModal({ open, onClose, onSubmit, loading }: { open: boolean; onClose: () => void; onSubmit: (p: Omit<Patient, "id" | "createdAt" | "updatedAt">) => void; loading?: boolean }) {
-  const [form, setForm] = useState<Omit<Patient, "id" | "createdAt" | "updatedAt">>({
-    fileNumber: `P-${Date.now().toString().slice(-8)}`,
-    firstName: "", lastName: "", gender: "M", birthDate: "1990-01-01T00:00:00Z",
-    bloodGroup: "O+", phone: "", email: "", address: "", city: "Dakar",
-    emergencyContact: "", emergencyPhone: "", status: "ACTIVE",
+function CreatePatientModal({ open, onClose, onSubmit, loading }: { open: boolean; onClose: () => void; onSubmit: (p: any) => void; loading?: boolean }) {
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    gender: "M",
+    birthDate: "1990-01-01",
+    bloodGroup: "O+",
+    phone: "",
+    email: "",
+    address: "",
+    city: "Yaoundé",
+    emergencyContact: "",
+    emergencyPhone: "",
+    status: "ACTIVE",
+    insuranceNumber: "",
+    insuranceCompany: "",
+    allergies: [] as string[],
+    antecedents: [] as string[],
   });
+
+  const [allergyInput, setAllergyInput] = useState("");
+  const [antecedentInput, setAntecedentInput] = useState("");
+
+  const f = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm({ ...form, [field]: e.target.value });
+
+  const addAllergy = () => {
+    if (allergyInput.trim()) {
+      setForm({ ...form, allergies: [...form.allergies, allergyInput.trim()] });
+      setAllergyInput("");
+    }
+  };
+
+  const addAntecedent = () => {
+    if (antecedentInput.trim()) {
+      setForm({ ...form, antecedents: [...form.antecedents, antecedentInput.trim()] });
+      setAntecedentInput("");
+    }
+  };
 
   const submit = () => {
     if (!form.firstName || !form.lastName) {
@@ -158,7 +218,7 @@ function CreatePatientModal({ open, onClose, onSubmit, loading }: { open: boolea
       open={open}
       onClose={onClose}
       title="Nouveau patient"
-      description="Créer un dossier patient"
+      description="Enregistrement du patient — le dossier médical sera créé automatiquement"
       size="lg"
       footer={
         <>
@@ -167,21 +227,94 @@ function CreatePatientModal({ open, onClose, onSubmit, loading }: { open: boolea
         </>
       }
     >
-      <div className="grid grid-cols-2 gap-3">
-        <div><Label required>Prénom</Label><Input value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} /></div>
-        <div><Label required>Nom</Label><Input value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} /></div>
-        <div><Label>Genre</Label><Select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value as any })}><option value="M">Masculin</option><option value="F">Féminin</option></Select></div>
-        <div><Label>Date de naissance</Label><Input type="date" value={form.birthDate?.split('T')[0]} onChange={e => setForm({ ...form, birthDate: e.target.value })} /></div>
-        <div><Label>Groupe sanguin</Label><Select value={form.bloodGroup} onChange={e => setForm({ ...form, bloodGroup: e.target.value as any })}>
-          {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map(b => <option key={b} value={b}>{b}</option>)}
-        </Select></div>
-        <div><Label>Téléphone</Label><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-        <div className="col-span-2"><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
-        <div><Label>Adresse</Label><Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} /></div>
-        <div><Label>Ville</Label><Input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} /></div>
-        <div><Label>Contact d'urgence</Label><Input value={form.emergencyContact} onChange={e => setForm({ ...form, emergencyContact: e.target.value })} /></div>
-        <div><Label>Téléphone d'urgence</Label><Input value={form.emergencyPhone} onChange={e => setForm({ ...form, emergencyPhone: e.target.value })} /></div>
+      <div className="space-y-4">
+        {/* Identité */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)" }}>Identité</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label required>Prénom</Label><Input value={form.firstName} onChange={f("firstName")} placeholder="Jean" /></div>
+            <div><Label required>Nom</Label><Input value={form.lastName} onChange={f("lastName")} placeholder="Dupont" /></div>
+            <div>
+              <Label>Genre</Label>
+              <Select value={form.gender} onChange={f("gender")}>
+                <option value="M">Masculin</option>
+                <option value="F">Féminin</option>
+                <option value="OTHER">Autre</option>
+              </Select>
+            </div>
+            <div><Label>Date de naissance</Label><Input type="date" value={form.birthDate} onChange={f("birthDate")} /></div>
+            <div>
+              <Label>Groupe sanguin</Label>
+              <Select value={form.bloodGroup} onChange={f("bloodGroup")}>
+                {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map(b => <option key={b} value={b}>{b}</option>)}
+              </Select>
+            </div>
+            <div><Label>Téléphone</Label><Input value={form.phone} onChange={f("phone")} placeholder="+237 6XX XXX XXX" /></div>
+            <div className="col-span-2"><Label>Email</Label><Input type="email" value={form.email} onChange={f("email")} placeholder="patient@email.com" /></div>
+          </div>
+        </div>
+
+        {/* Adresse & contact d'urgence */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)" }}>Adresse & Contact d'urgence</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Adresse</Label><Input value={form.address} onChange={f("address")} placeholder="Rue de la Paix" /></div>
+            <div><Label>Ville</Label><Input value={form.city} onChange={f("city")} placeholder="Yaoundé" /></div>
+            <div><Label>Contact d'urgence</Label><Input value={form.emergencyContact} onChange={f("emergencyContact")} placeholder="Nom du contact" /></div>
+            <div><Label>Tél. d'urgence</Label><Input value={form.emergencyPhone} onChange={f("emergencyPhone")} placeholder="+237 6XX XXX XXX" /></div>
+          </div>
+        </div>
+
+        {/* Assurance */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)" }}>Assurance (optionnel)</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>N° Carte d'assurance</Label><Input value={form.insuranceNumber} onChange={f("insuranceNumber")} placeholder="ASS-XXXX-XXXX" /></div>
+            <div><Label>Compagnie</Label><Input value={form.insuranceCompany} onChange={f("insuranceCompany")} placeholder="CNAMGS, ASCOMA..." /></div>
+          </div>
+          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+            Si un numéro de carte est fourni, la couverture sera vérifiée automatiquement auprès de l'assureur.
+          </p>
+        </div>
+
+        {/* Allergies */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)" }}>Allergies connues</p>
+          <div className="flex gap-2">
+            <Input value={allergyInput} onChange={e => setAllergyInput(e.target.value)} placeholder="Ex: Pénicilline" onKeyDown={e => e.key === "Enter" && addAllergy()} className="flex-1" />
+            <Button type="button" variant="outline" size="sm" onClick={addAllergy}>+ Ajouter</Button>
+          </div>
+          {form.allergies.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {form.allergies.map((a, i) => (
+                <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs" style={{ background: "var(--error-bg)", color: "var(--error)" }}>
+                  {a}
+                  <button onClick={() => setForm({ ...form, allergies: form.allergies.filter((_, j) => j !== i) })} className="hover:opacity-70">×</button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Antécédents */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)" }}>Antécédents médicaux</p>
+          <div className="flex gap-2">
+            <Input value={antecedentInput} onChange={e => setAntecedentInput(e.target.value)} placeholder="Ex: Hypertension" onKeyDown={e => e.key === "Enter" && addAntecedent()} className="flex-1" />
+            <Button type="button" variant="outline" size="sm" onClick={addAntecedent}>+ Ajouter</Button>
+          </div>
+          {form.antecedents.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {form.antecedents.map((a, i) => (
+                <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs" style={{ background: "var(--warning-bg)", color: "var(--warning)" }}>
+                  {a}
+                  <button onClick={() => setForm({ ...form, antecedents: form.antecedents.filter((_, j) => j !== i) })} className="hover:opacity-70">×</button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </Modal>
   );
-}
+}

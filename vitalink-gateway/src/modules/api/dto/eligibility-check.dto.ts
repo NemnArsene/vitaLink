@@ -1,25 +1,39 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional } from 'class-validator';
 
 export class EligibilityCheckDto {
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  hospitalId: string;
+  hospitalId?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  insuranceCardNumber: string;
+  insuranceCardNumber?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  patientId: string;
+  patientId?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  patientName: string;
+  patientName?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   service?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  serviceDate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  actCode?: string;
 }

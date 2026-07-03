@@ -119,6 +119,19 @@ export interface Hospital extends Timestamps {
 export type Gender = "M" | "F";
 export type BloodGroup = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
 
+export interface PatientAddress {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+}
+
+export interface PatientEmergencyContact {
+  name: string;
+  phone: string;
+  relationship: string;
+}
+
 export interface Patient extends Timestamps {
   id: ID;
   fileNumber: string;
@@ -134,10 +147,36 @@ export interface Patient extends Timestamps {
   insuranceId?: ID;
   insuranceNumber?: string;
   insuranceCompany?: string;
+  insuranceStatus?: "ASSURE" | "NON_ASSURE" | "EN_ATTENTE";
+  insuranceCoveragePercentage?: number;
   emergencyContact: string;
   emergencyPhone: string;
   status: "ACTIVE" | "INACTIVE" | "DECEASED";
   photoUrl?: string;
+  allergies?: string[];
+  antecedents?: string[];
+}
+
+// Raw MongoDB document shape
+export interface PatientRaw {
+  _id: { $oid: string };
+  firstName: string;
+  lastName: string;
+  medicalRecordNumber: string;
+  dateOfBirth: { $date: string };
+  gender: "M" | "F";
+  phone: string;
+  email: string;
+  address: PatientAddress;
+  emergencyContact: PatientEmergencyContact;
+  bloodType: string;
+  allergies?: string[];
+  antecedents?: string[];
+  insuranceCardNumber?: string;
+  insuranceProvider?: string;
+  status: string;
+  createdAt: { $date: string };
+  updatedAt: { $date: string };
 }
 
 export type AllergySeverity = "MILD" | "MODERATE" | "SEVERE";

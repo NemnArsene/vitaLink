@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Role, Permission } from "@/types";
 import { ROLE_PERMISSIONS } from "@/types";
-import { AuthService } from "@/services";
+import { AuthService, isStandaloneMode } from "@/services";
 
 export type Theme = "light" | "dark";
 
@@ -15,6 +15,7 @@ export interface AuthUser {
   service: string;
   avatar?: string;
   token?: string;
+  coreToken?: string;
 }
 
 interface AuthState {
@@ -73,6 +74,17 @@ export const useAuthStore = create<AuthState>()(
             service: result.user.service || "Général",
             token: result.accessToken,
           };
+
+          // En mode gateway, on récupère aussi un token pour le core API
+          if (!isStandaloneMode) {
+            try {
+              const { data } = await (await import("@/services/http")).coreHttpClient.post("/auth/login", { email, password });
+              apiUser.coreToken = data.data.accessToken;
+            } catch {
+              console.warn("Impossible d'obtenir un token core API, les appels backend pourraient échouer");
+            }
+          }
+
           set({ user: apiUser, isAuthenticated: true });
         } catch {
           throw new Error("Échec de connexion");

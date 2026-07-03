@@ -18,10 +18,10 @@ coreHttpClient.interceptors.request.use((config: InternalAxiosRequestConfig) => 
   if (stored) {
     try {
       const { state } = JSON.parse(stored);
-      if (state?.user?.token) {
-        config.headers.Authorization = `Bearer ${state.user.token}`;
-      } else if (state?.token) { // Fallback for previous store structure
-        config.headers.Authorization = `Bearer ${state.token}`;
+      // Le core API utilise son propre token (coreToken), pas celui du gateway
+      const coreToken = state?.user?.coreToken || state?.user?.token;
+      if (coreToken) {
+        config.headers.Authorization = `Bearer ${coreToken}`;
       }
     } catch {}
   }
@@ -32,8 +32,8 @@ coreHttpClient.interceptors.response.use(
   (res) => res,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Pourrait déclencher une déconnexion automatique
-      console.warn("Unauthorized access to Core API");
+      localStorage.removeItem("hms-auth");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }

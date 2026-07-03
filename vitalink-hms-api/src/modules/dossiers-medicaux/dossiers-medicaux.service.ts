@@ -96,7 +96,10 @@ export class DossiersMedicauxService {
       agent_accueil: 'Agent_accueil',
       admin_hopital: 'Admin_hopital',
       directeur_hopital: 'Médecin',
+      // Cas service/system
+      service: 'Admin_hopital',
+      system: 'Admin_hopital',
     };
-    return roleMap[role] || role;
+    return roleMap[role?.toLowerCase()] || 'Admin_hopital';
   }
 }

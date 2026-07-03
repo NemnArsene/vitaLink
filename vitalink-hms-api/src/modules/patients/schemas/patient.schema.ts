@@ -57,6 +57,12 @@ export class Patient extends BaseSchema {
   @Prop()
   insuranceProvider: string;
 
+  @Prop({ default: 'EN_ATTENTE', enum: ['ASSURE', 'NON_ASSURE', 'EN_ATTENTE'] })
+  insuranceStatus: string;
+
+  @Prop({ default: 0 })
+  insuranceCoveragePercentage: number;
+
   @Prop({ default: 'active', enum: ['active', 'inactive', 'deceased'] })
   status: string;
 }

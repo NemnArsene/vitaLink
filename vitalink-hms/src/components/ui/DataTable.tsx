@@ -36,7 +36,7 @@ export function DataTable<T>({
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const filtered = useMemo(() => {
-    let list = data;
+    let list = Array.isArray(data) ? data : [];
     if (search) {
       const q = search.toLowerCase();
       list = data.filter(row =>

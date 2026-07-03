@@ -17,7 +17,9 @@ export class HmsProxyController {
   @Scopes(Scope.HOSPITAL, Scope.ADMIN)
   @ApiOperation({ summary: 'Proxy all requests to HMS API' })
   async proxy(@Req() req: Request, @Res() res: Response) {
-    const path = req.path === '/' ? '' : req.path;
+    // req.path includes the global prefix and controller prefix, e.g., /api/v1/hms/refunds
+    // We need to strip the /hms part to forward as /api/v1/refunds
+    const path = req.path.replace('/hms', '') || '/';
     const method = req.method as any;
     const originalUser = (req as any).user;
 

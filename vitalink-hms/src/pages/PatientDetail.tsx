@@ -21,7 +21,7 @@ export default function PatientDetail() {
   const [allergyOpen, setAllergyOpen] = useState(false);
   const [condOpen, setCondOpen] = useState(false);
 
-  const { data: patient, isLoading } = useQuery({ queryKey: ["patient", id], queryFn: () => PatientsService.get(id!), enabled: !!id });
+  const { data: patient, isLoading } = useQuery({ queryKey: ["patient", id], queryFn: () => PatientsService.getById(id!), enabled: !!id });
   const { data: record } = useQuery({ queryKey: ["record", id], queryFn: () => MedicalRecordsService.getByPatient(id!), enabled: !!id });
   const { data: consultations = [] } = useQuery({ queryKey: ["consultations"], queryFn: ConsultationsService.list });
   const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: BillingService.list });
@@ -108,8 +108,8 @@ export default function PatientDetail() {
               <div className="space-y-2">
                 {(!record?.allergies || record.allergies.length === 0) ? (
                   <p className="text-xs italic" style={{ color: "var(--text-muted)" }}>Aucune allergie connue</p>
-                ) : record.allergies.map(a => (
-                  <div key={a.id} className="flex items-center justify-between p-2.5 rounded-lg border border-[var(--border)]">
+                ) : record.allergies.map((a, idx) => (
+                  <div key={a.id || `a-${idx}`} className="flex items-center justify-between p-2.5 rounded-lg border border-[var(--border)]">
                     <div>
                       <div className="text-sm font-semibold">{a.substance}</div>
                       <div className="text-xs" style={{ color: "var(--text-muted)" }}>{a.reaction}</div>
@@ -131,8 +131,8 @@ export default function PatientDetail() {
               <div className="space-y-2">
                 {(!record?.conditions || record.conditions.length === 0) ? (
                   <p className="text-xs italic" style={{ color: "var(--text-muted)" }}>Aucun antécédent déclaré</p>
-                ) : record.conditions.map(c => (
-                  <div key={c.id} className="flex items-center justify-between p-2.5 rounded-lg border border-[var(--border)]">
+                ) : record.conditions.map((c, idx) => (
+                  <div key={c.id || `cond-${idx}`} className="flex items-center justify-between p-2.5 rounded-lg border border-[var(--border)]">
                     <div>
                       <div className="text-sm font-semibold">{c.name}</div>
                       <div className="text-xs" style={{ color: "var(--text-muted)" }}>{c.notes}</div>
@@ -155,8 +155,8 @@ export default function PatientDetail() {
           <CardHeader><CardTitle>Consultations récentes</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {myConsultations.length === 0 && <p className="text-xs italic py-4 text-center" style={{ color: "var(--text-muted)" }}>Aucune consultation</p>}
-            {myConsultations.map(c => (
-              <div key={c.id} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-[var(--surface-2)]">
+            {myConsultations.map((c, idx) => (
+              <div key={c.id || `c-${idx}`} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-[var(--surface-2)]">
                 <div>
                   <div className="text-sm font-semibold">{c.reason}</div>
                   <div className="text-xs" style={{ color: "var(--text-muted)" }}>{c.doctorName} · {formatDate(c.scheduledAt)}</div>
@@ -170,8 +170,8 @@ export default function PatientDetail() {
           <CardHeader><CardTitle>Factures</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {myInvoices.length === 0 && <p className="text-xs italic py-4 text-center" style={{ color: "var(--text-muted)" }}>Aucune facture</p>}
-            {myInvoices.map(i => (
-              <div key={i.id} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-[var(--surface-2)]">
+            {myInvoices.map((i, idx) => (
+              <div key={i.id || `i-${idx}`} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-[var(--surface-2)]">
                 <div>
                   <div className="text-sm font-semibold font-mono">{i.number}</div>
                   <div className="text-xs" style={{ color: "var(--text-muted)" }}>{formatDate(i.issuedAt)} · Total {formatCurrency(i.total)}</div>

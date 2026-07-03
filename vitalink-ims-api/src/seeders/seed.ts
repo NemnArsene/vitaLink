@@ -119,8 +119,66 @@ const POLICIES = [
     ],
     telephone: '+237 677 88 99 00',
     email: 'jean.kamga@email.com',
-  }
+  },
+  // Cas 5 : Assuré CNAMGS (couverture fonctionnaire)
+  {
+    policyNumber: 'POL-2026-001238',
+    subscriberId: 'SUB-006',
+    subscriberName: 'Marie-Claire Essomba',
+    insuranceProviderId: 'INS-CNAMGS-001',
+    providerName: 'CNAMGS',
+    insuranceCardNumber: 'CARD-2026-0006',
+    type: 'fonctionnaire',
+    statut: 'active',
+    dateDebut: new Date('2026-01-01'),
+    dateFin: new Date('2026-12-31'),
+    garanties: [
+      { code: 'CONSULTATION', libelle: 'Consultation médicale', montantMax: 300000, pourcentage: 100 },
+      { code: 'HOSPITALISATION', libelle: 'Hospitalisation', montantMax: 5000000, pourcentage: 100 },
+      { code: 'PHARMACIE', libelle: 'Pharmacie', montantMax: 800000, pourcentage: 80 },
+      { code: 'LABORATOIRE', libelle: 'Analyses & Laboratoire', montantMax: 500000, pourcentage: 100 },
+    ],
+    telephone: '+237 699 00 11 22',
+    email: 'marie.essomba@gov.cm',
+  },
+  // Cas 6 : Police EXPIRÉE → NON_ASSURE car dateFin dépassée
+  {
+    policyNumber: 'POL-2025-009999',
+    subscriberId: 'SUB-007',
+    subscriberName: 'Paul Nguena',
+    insuranceProviderId: 'INS-ASCOMA-001',
+    providerName: 'Ascoma',
+    insuranceCardNumber: 'CARD-2025-EXPIRED',
+    type: 'individuelle',
+    statut: 'active',  // statut active mais dateFin passée
+    dateDebut: new Date('2025-01-01'),
+    dateFin: new Date('2025-12-31'),  // expirée
+    garanties: [
+      { code: 'CONSULTATION', libelle: 'Consultation médicale', montantMax: 200000, pourcentage: 70 },
+    ],
+    telephone: '+237 655 22 33 44',
+    email: 'paul.nguena@email.com',
+  },
+  // Cas 7 : Police suspendue → NON_ASSURE (statut suspended)
+  {
+    policyNumber: 'POL-2026-002000',
+    subscriberId: 'SUB-008',
+    subscriberName: 'Fatou Diop',
+    insuranceProviderId: 'INS-AXA-001',
+    providerName: 'AXA Assurances',
+    insuranceCardNumber: 'CARD-2026-SUSPENDED',
+    type: 'individuelle',
+    statut: 'suspended',  // suspendue → findOne({statut:'active'}) ne la trouvera pas
+    dateDebut: new Date('2026-01-01'),
+    dateFin: new Date('2026-12-31'),
+    garanties: [
+      { code: 'CONSULTATION', libelle: 'Consultation médicale', montantMax: 400000, pourcentage: 75 },
+    ],
+    telephone: '+237 688 55 66 77',
+    email: 'fatou.diop@email.com',
+  },
 ];
+
 
 const INSURANCE_CLAIMS = [
   {

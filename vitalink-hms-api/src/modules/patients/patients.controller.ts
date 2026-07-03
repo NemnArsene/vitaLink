@@ -1,5 +1,7 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { CurrentUser, JwtPayload } from '../../common/decorators/current-user.decorator';
 import { PatientsService } from './patients.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
@@ -11,10 +13,12 @@ export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new patient' })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Create a new patient and initialize medical record' })
   @ApiResponse({ status: 201, description: 'Patient created successfully' })
-  create(@Body() createPatientDto: CreatePatientDto) {
-    return this.patientsService.create(createPatientDto);
+  create(@Body() createPatientDto: CreatePatientDto, @CurrentUser() user: JwtPayload) {
+    return this.patientsService.create(createPatientDto, user);
   }
 
   @Get()

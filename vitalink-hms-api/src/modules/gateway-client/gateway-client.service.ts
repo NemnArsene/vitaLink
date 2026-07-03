@@ -107,7 +107,10 @@ export class GatewayClientService {
           { headers: this.getHeaders() },
         ),
       );
-      return response.data;
+      // Handle IMS TransformInterceptor envelope: { success, data: { eligible, coverageDetails } }
+      const raw = response.data;
+      const payload: EligibilityResponse = raw?.data ?? raw;
+      return payload;
     } catch (error) {
       this.logger.error(`Failed to check eligibility: ${error.message}`);
       throw error;
