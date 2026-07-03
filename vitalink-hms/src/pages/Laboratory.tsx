@@ -11,7 +11,7 @@ import { Input, Label, Select, Textarea } from "@/components/ui/Input";
 import { usePermission } from "@/hooks/usePermission";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatDateTime } from "@/lib/format";
-import { httpClient } from "@/api/http-client";
+import { coreHttpClient } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
@@ -36,7 +36,7 @@ export default function Laboratory() {
     try {
       const params: any = {};
       if (isDoctor && doctorName) params.requestedBy = doctorName;
-      const { data } = await httpClient.get("/laboratory", { params });
+      const { data } = await coreHttpClient.get("/laboratory", { params });
       const raw = data?.data?.data || data?.data || data?.results || data || [];
       const items = (Array.isArray(raw) ? raw : []).map((r: any) => toExam(r));
       setExams(items);
@@ -49,7 +49,7 @@ export default function Laboratory() {
 
   const notifyDoctor = async (id: string) => {
     try {
-      await httpClient.post(`/laboratory/${id}/notify-doctor`);
+      await coreHttpClient.post(`/laboratory/${id}/notify-doctor`);
       setExams(exams.map(e => e._id === id || e.id === id ? { ...e, doctorNotified: true } : e));
       toast.success("Médecin notifié");
     } catch {
@@ -60,7 +60,7 @@ export default function Laboratory() {
   const saveResult = async () => {
     if (!resultOpen || !resultValue.trim()) { toast.error("Veuillez saisir un résultat"); return; }
     try {
-      await httpClient.post(`/laboratory/${resultOpen._id || resultOpen.id}/record-result`, {
+      await coreHttpClient.post(`/laboratory/${resultOpen._id || resultOpen.id}/record-result`, {
         resultValue: resultValue.trim(), resultText: resultValue.trim(), interpretedBy: user?.email || "lab",
       });
       await loadExams();
@@ -177,7 +177,7 @@ function NewExamModal({ open, onClose, onCreated }: { open: boolean; onClose: ()
   const create = async () => {
     if (!form.patientSearch.trim()) { toast.error("Veuillez renseigner le patient"); return; }
     try {
-      const { data } = await httpClient.post("/laboratory", {
+      const { data } = await coreHttpClient.post("/laboratory", {
         patientName: form.patientSearch,
         patientId: form.patientSearch,
         medicalRecordNumber: `P-${Date.now().toString().slice(-8)}`,

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Users, UserPlus, Receipt, Banknote, TrendingUp, BedDouble, Activity, AlertCircle, Calendar, Building2 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell } from "recharts";
-import { DashboardAPI } from "@/api/client";
+import { DashboardService } from "@/services";
 import { StatCard } from "@/components/ui/Stat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -18,9 +18,9 @@ const PIE_COLORS = ["#0d9488", "#6366f1", "#f59e0b", "#ef4444", "#3b82f6", "#10b
 export default function Dashboard() {
   const user = useAuthStore(s => s.user);
 
-  const { data: kpi, isLoading } = useQuery({ queryKey: ["kpi"], queryFn: DashboardAPI.kpi });
-  const { data: revenue } = useQuery({ queryKey: ["revenue"], queryFn: DashboardAPI.revenue });
-  const { data: occupancy } = useQuery({ queryKey: ["occupancy"], queryFn: DashboardAPI.occupancy });
+  const { data: kpi, isLoading } = useQuery({ queryKey: ["kpi"], queryFn: DashboardService.kpi });
+  const { data: revenue } = useQuery({ queryKey: ["revenue"], queryFn: DashboardService.revenue });
+  const { data: occupancy } = useQuery({ queryKey: ["occupancy"], queryFn: DashboardService.occupancy });
 
   if (isLoading || !kpi) return <PageSpinner />;
 

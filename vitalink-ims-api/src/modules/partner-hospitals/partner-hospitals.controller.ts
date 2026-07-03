@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { PartnerHospitalsService } from './partner-hospitals.service';
 import { CreatePartnerHospitalDto, UpdatePartnerHospitalDto } from './dto/partner-hospital.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Partner Hospitals')
 @ApiBearerAuth('access-token')
@@ -24,6 +25,7 @@ export class PartnerHospitalsController {
   }
 
   @Get('active')
+  @Public()
   @ApiOperation({ summary: 'Get active partner hospitals' })
   getActive() {
     return this.partnerHospitalsService.findActive();

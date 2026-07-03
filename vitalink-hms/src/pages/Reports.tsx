@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Label, Select } from "@/components/ui/Input";
 import { toast } from "sonner";
-import { ReportsAPI } from "@/api/http-client";
+import { ReportsService } from "@/services";
 
 const REPORTS = [
   { id: "activity", apiType: "activity", name: "Rapport d'activité mensuel", description: "Nombre de patients, consultations, hospitalisations", icon: Activity, color: "text-sky-600 bg-sky-50" },
@@ -101,7 +101,7 @@ export default function Reports() {
     setLoading(report.id);
     try {
       const dateRange = getDateRange(period);
-      const result = await ReportsAPI.generate(report.apiType, dateRange.startDate, dateRange.endDate);
+      const result = await ReportsService.generate(report.apiType, dateRange.startDate, dateRange.endDate);
       const content = format === "pdf" ? generateReportHTML(report.name, period, report.description, result) : generateReportCSV(report.name, period, result);
       const type = format === "pdf" ? "text/html" : "text/csv";
       const ext = format === "pdf" ? "html" : "csv";

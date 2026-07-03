@@ -10,8 +10,8 @@ import { Input, Label, Select, Textarea } from "@/components/ui/Input";
 import { useAuthStore } from "@/stores/authStore";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatDateTime } from "@/lib/format";
-import { WrittenReportsAPI } from "@/api/http-client";
-import { PersonnelAPI } from "@/api/http-client";
+import { WrittenReportsService } from "@/services";
+import { PersonnelService } from "@/services";
 import { toast } from "sonner";
 
 interface Report {
@@ -38,16 +38,16 @@ export default function WrittenReports() {
   const loadReports = useCallback(async () => {
     try {
       let data: Report[];
-      if (tab === "drafts") data = await WrittenReportsAPI.drafts();
-      else if (tab === "sent") data = await WrittenReportsAPI.sent();
-      else data = await WrittenReportsAPI.received();
+      if (tab === "drafts") data = await WrittenReportsService.drafts();
+      else if (tab === "sent") data = await WrittenReportsService.sent();
+      else data = await WrittenReportsService.received();
       setReports(Array.isArray(data) ? data : []);
     } catch { setReports([]); }
   }, [tab]);
 
   const loadPersonnel = useCallback(async () => {
     try {
-      const data = await PersonnelAPI.list();
+      const data = await PersonnelService.list();
       setPersonnel(Array.isArray(data) ? data : []);
     } catch { setPersonnel([]); }
   }, []);
@@ -57,7 +57,7 @@ export default function WrittenReports() {
 
   const handleSend = async (id: string) => {
     try {
-      await WrittenReportsAPI.send(id);
+      await WrittenReportsService.send(id);
       await loadReports();
       toast.success("Rapport envoyé");
     } catch { toast.error("Erreur lors de l'envoi"); }
@@ -65,7 +65,7 @@ export default function WrittenReports() {
 
   const handleDelete = async (id: string) => {
     try {
-      await WrittenReportsAPI.remove(id);
+      await WrittenReportsService.remove(id);
       await loadReports();
       toast.success("Rapport supprimé");
     } catch { toast.error("Erreur lors de la suppression"); }
@@ -213,10 +213,10 @@ function ReportModal({ open, onClose, editing, personnel, onSaved }: {
     }
     try {
       if (editing) {
-        await WrittenReportsAPI.update(editing._id || editing.id, { title, content, recipientId });
+        await WrittenReportsService.update(editing._id || editing.id, { title, content, recipientId });
         toast.success("Rapport mis à jour");
       } else {
-        await WrittenReportsAPI.create({ title, content, recipientId });
+        await WrittenReportsService.create({ title, content, recipientId });
         toast.success("Rapport créé");
       }
       onSaved();

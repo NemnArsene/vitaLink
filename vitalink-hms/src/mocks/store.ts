@@ -12,6 +12,7 @@ import type {
   User, MedicalService, ActCatalogItem,
   DashboardKPI, MonthlyRevenuePoint, ServiceOccupancy, Allergy, MedicalCondition,
   PharmacyItem,
+  MedicalRecord,
 } from "@/types";
 
 // In-memory working copy (mutations persist for the session)

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Thermometer, Heart, Activity, AlertTriangle, Stethoscope, Clock, ListChecks } from "lucide-react";
-import { PatientsAPI } from "@/api/client";
+import { PatientsService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";

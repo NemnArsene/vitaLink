@@ -15,6 +15,8 @@ const MOCK_USERS = [
   { id: 'usr_h_007', email: 'infirmier@hgd.cm', password: 'password', nom: 'Ndiaye', prenom: 'Fatou', role: 'NURSE', service: 'Pédiatrie', entityId: '11111111-1111-1111-1111-111111111111', permissions: ['soins.create', 'soins.view', 'patients.view'] },
   { id: 'usr_h_008', email: 'facturation@hgd.cm', password: 'password', nom: 'Ba', prenom: 'Ousmane', role: 'BILLING', service: 'Facturation', entityId: '11111111-1111-1111-1111-111111111111', permissions: ['factures.create', 'factures.view', 'remboursements.view'] },
   { id: 'usr_h_009', email: 'direction@hgd.cm', password: 'password', nom: 'Fall', prenom: 'Cheikh', role: 'DIRECTOR', service: 'Direction', entityId: '11111111-1111-1111-1111-111111111111', permissions: ['*'] },
+  // Utilisateur d'une clinique NON partenaire (pour tester le mode Standalone ou le rejet Gateway)
+  { id: 'usr_h_999', email: 'admin@cliniquesante.cm', password: 'password', nom: 'Admin', prenom: 'Indépendant', role: 'ADMIN_HOPITAL', service: 'Administration', entityId: '99999999-9999-9999-9999-999999999999', permissions: ['*'] },
 ];
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Shield, CheckCircle, XCircle, AlertTriangle, LogIn, LogOut, Plus, Pencil, Trash2, Eye, Download, SendHorizonal, Ban, Banknote, Filter } from "lucide-react";
-import { AuditAPI } from "@/api/client";
+import { AuditService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -51,8 +51,8 @@ export default function AuditLog() {
   const [actionFilter, setActionFilter] = useState("");
   const [entityFilter, setEntityFilter] = useState("");
 
-  const { data: logs = [] } = useQuery({ queryKey: ["audit-logs"], queryFn: AuditAPI.list });
-  const { data: stats } = useQuery({ queryKey: ["audit-stats"], queryFn: AuditAPI.stats });
+  const { data: logs = [] } = useQuery({ queryKey: ["audit-logs"], queryFn: AuditService.list });
+  const { data: stats } = useQuery({ queryKey: ["audit-stats"], queryFn: AuditService.stats });
 
   const filtered = useMemo(() => {
     let result = logs;

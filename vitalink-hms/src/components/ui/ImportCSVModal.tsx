@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { Upload, X, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
-import { ImportExportAPI } from "@/api/http-client";
+import { ImportExportService } from "@/services";
 
 interface ImportResult {
   imported: number;
@@ -38,7 +38,7 @@ export function ImportCSVModal({ open, onClose, onSuccess }: Props) {
     setLoading(true);
     setResult(null);
     try {
-      const res = await ImportExportAPI.importPatients(file);
+      const res = await ImportExportService.importPatients(file);
       setResult(res);
       if (res.imported > 0) onSuccess?.();
     } catch (err: any) {

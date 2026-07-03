@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { InsuredsAPI } from "../api/http-client";
+import { InsuredsService } from "../services";
 import type {
   Insured,
   Contract,
   Guarantee,
   Hospital,
+  Notification,
   ReimbursementClaim,
 } from "../types";
 
@@ -29,7 +30,7 @@ export const QK = {
 export function useInsureds() {
   return useQuery({
     queryKey: QK.insureds,
-    queryFn: InsuredsAPI.list,
+    queryFn: InsuredsService.list,
     select: (data: any) => {
       if (!data) return [];
       const raw = Array.isArray(data) ? data : data.data || data.results || [];
@@ -41,7 +42,7 @@ export function useInsureds() {
 export function useInsured(id: string) {
   return useQuery({
     queryKey: QK.insured(id),
-    queryFn: () => InsuredsAPI.get(id),
+    queryFn: () => InsuredsService.get(id),
     enabled: !!id,
     select: mapInsured,
   });
@@ -50,7 +51,7 @@ export function useInsured(id: string) {
 export function useCreateInsured() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: InsuredsAPI.create,
+    mutationFn: InsuredsService.create,
     onSuccess: () => qc.invalidateQueries({ queryKey: QK.insureds }),
   });
 }
@@ -59,7 +60,7 @@ export function useUpdateInsured() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Insured> }) =>
-      InsuredsAPI.update(id, data),
+      InsuredsService.update(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: QK.insureds }),
   });
 }
@@ -67,7 +68,7 @@ export function useUpdateInsured() {
 export function useDeleteInsured() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: InsuredsAPI.remove,
+    mutationFn: InsuredsService.remove,
     onSuccess: () => qc.invalidateQueries({ queryKey: QK.insureds }),
   });
 }
@@ -228,7 +229,7 @@ export function useActivity() {
 export function useNotifications() {
   return useQuery({
     queryKey: QK.notifications,
-    queryFn: async () => [],
+    queryFn: async () => [] as Notification[],
   });
 }
 

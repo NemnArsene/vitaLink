@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Plus, Filter, Upload, Users as UsersIcon } from "lucide-react";
-import { PatientsAPI } from "@/api/client";
+import { PatientsService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -32,7 +32,7 @@ export default function Patients() {
 
   const { data: patientsRaw = [] } = useQuery({
     queryKey: ["patients", status, insurance],
-    queryFn: () => PatientsAPI.list({ status, insurance }),
+    queryFn: () => PatientsService.list({ status, insurance }),
   });
   const patients = patientsRaw.filter(p => {
     if (genderFilter !== "ALL" && p.gender !== genderFilter) return false;
@@ -41,7 +41,7 @@ export default function Patients() {
   });
 
   const createMut = useMutation({
-    mutationFn: PatientsAPI.create,
+    mutationFn: PatientsService.create,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["patients"] });
       setCreateOpen(false);

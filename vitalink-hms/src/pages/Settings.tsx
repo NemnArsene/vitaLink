@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Building2, Activity, Tag } from "lucide-react";
-import { SettingsAPI } from "@/api/client";
+import { SettingsService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -21,15 +21,15 @@ export default function Settings() {
   const [openService, setOpenService] = useState(false);
   const [openAct, setOpenAct] = useState(false);
 
-  const { data: services = [] } = useQuery({ queryKey: ["services"], queryFn: SettingsAPI.services });
-  const { data: acts = [] } = useQuery({ queryKey: ["acts-catalog"], queryFn: SettingsAPI.acts });
+  const { data: services = [] } = useQuery({ queryKey: ["services"], queryFn: SettingsService.services });
+  const { data: acts = [] } = useQuery({ queryKey: ["acts-catalog"], queryFn: SettingsService.acts });
 
   const createServiceMut = useMutation({
-    mutationFn: SettingsAPI.createService,
+    mutationFn: SettingsService.createService,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["services"] }); setOpenService(false); toast.success("Service créé"); },
   });
   const createActMut = useMutation({
-    mutationFn: SettingsAPI.createAct,
+    mutationFn: SettingsService.createAct,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["acts-catalog"] }); setOpenAct(false); toast.success("Acte ajouté au catalogue"); },
   });
 

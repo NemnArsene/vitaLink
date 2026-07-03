@@ -9,7 +9,7 @@ import { Badge } from "../ui/Badge";
 import { cn } from "../../utils/cn";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AuthAPI } from "../../api/http-client";
+import { AuthService } from "../../services";
 
 export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const darkMode = useUIStore((s) => s.darkMode);
@@ -27,7 +27,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   const handleLogout = async () => {
     try {
-      await AuthAPI.logout();
+      await AuthService.logout();
     } catch {}
     logout();
     localStorage.removeItem("medisure-auth");

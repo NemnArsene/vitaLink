@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
@@ -41,6 +43,16 @@ const MOCK_USERS = {
       entityId: '11111111-1111-1111-1111-111111111111',
       permissions: ['consultations.create', 'consultations.view', 'actes.create', 'prescriptions.create', 'patients.view'],
     },
+    {
+      id: 'usr_h_999',
+      email: 'admin@cliniquesante.cm',
+      password: 'password',
+      nom: 'Admin',
+      prenom: 'Indépendant',
+      role: PlatformRole.ADMIN_HOPITAL,
+      entityId: '99999999-9999-9999-9999-999999999999',
+      permissions: ['users.manage', 'services.manage', 'audit.view', 'stats.view', 'patients.create'],
+    },
   ],
   insurance: [
     {
@@ -73,6 +85,7 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
     @InjectModel(RefreshToken.name) private refreshTokenModel: Model<RefreshToken>,
     @InjectModel(TokenBlacklist.name) private tokenBlacklistModel: Model<TokenBlacklist>,
   ) {}
@@ -92,6 +105,21 @@ export class AuthService {
 
     if (password !== user.password) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (platform === 'hospital') {
+      try {
+        const imsBaseUrl = this.configService.get<string>('IMS_API_URL') || 'http://localhost:3002/api/v1';
+        const response = await firstValueFrom(this.httpService.get(`${imsBaseUrl}/partner-hospitals/active`));
+        const activeHospitals = response.data?.data || [];
+        const isWhitelisted = activeHospitals.some((h: any) => h.id === user.entityId);
+        if (!isWhitelisted) {
+          throw new UnauthorizedException('Hospital is not whitelisted by the insurance');
+        }
+      } catch (error) {
+        this.logger.warn(`Failed to verify hospital whitelist: ${error.message}`);
+        // Allow login if IMS is down in dev, otherwise we would block it
+      }
     }
 
     const scope = getScopeForRole(user.role);

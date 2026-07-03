@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User, Role, AppSettings, Notification } from "../types";
-import { AuthAPI } from "../api/http-client";
+import { AuthService } from "../services";
 
 interface AuthState {
   currentUser: User | null;
@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       login: (user, token) => set({ currentUser: user, isAuthenticated: true, token }),
       loginWithCredentials: async (email: string, password: string) => {
-        const result = await AuthAPI.login(email, password);
+        const result = await AuthService.login(email, password);
         const user: User = {
           id: result.user.id,
           email: result.user.email,

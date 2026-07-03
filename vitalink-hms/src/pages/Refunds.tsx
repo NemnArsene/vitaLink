@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2, Clock, Send, RefreshCw, XCircle, Banknote } from "lucide-react";
-import { RefundsAPI } from "@/api/client";
+import { RefundsService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
@@ -24,10 +24,10 @@ export default function Refunds() {
   const [dispute, setDispute] = useState<any>(null);
   const [reason, setReason] = useState("");
 
-  const { data: refunds = [] } = useQuery({ queryKey: ["refunds"], queryFn: RefundsAPI.list });
+  const { data: refunds = [] } = useQuery({ queryKey: ["refunds"], queryFn: RefundsService.list });
 
   const disputeMut = useMutation({
-    mutationFn: ({ id, reason }: any) => RefundsAPI.dispute(id, reason),
+    mutationFn: ({ id, reason }: any) => RefundsService.dispute(id, reason),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["refunds"] });
       setDispute(null); setReason("");

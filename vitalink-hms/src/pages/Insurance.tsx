@@ -1,14 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { ShieldCheck, FileCheck, Building2, Network, CheckCircle2 } from "lucide-react";
-import { InsuranceAPI } from "@/api/client";
+import { InsuranceService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { StatusBadge, Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/format";
 
 export default function Insurance() {
-  const { data: companies = [] } = useQuery({ queryKey: ["insurance-companies"], queryFn: InsuranceAPI.companies });
-  const { data: contracts = [] } = useQuery({ queryKey: ["insurance-contracts"], queryFn: InsuranceAPI.contracts });
+  const { data: companies = [] } = useQuery({ queryKey: ["insurance-companies"], queryFn: InsuranceService.companies });
+  const { data: contracts = [] } = useQuery({ queryKey: ["insurance-contracts"], queryFn: InsuranceService.contracts });
 
   return (
     <div className="space-y-6">

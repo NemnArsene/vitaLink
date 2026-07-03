@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Receipt, Download, Send, Eye, ShieldCheck, Printer } from "lucide-react";
-import { InvoicesAPI, RefundsAPI, PatientsAPI } from "@/api/client";
+import { BillingService, RefundsService, PatientsService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
@@ -20,11 +20,11 @@ export default function Billing() {
   const [detail, setDetail] = useState<any>(null);
   const [refundOpen, setRefundOpen] = useState<any>(null);
 
-  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: InvoicesAPI.list });
-  const { data: patients = [] } = useQuery({ queryKey: ["patients"], queryFn: () => PatientsAPI.list() });
+  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: BillingService.list });
+  const { data: patients = [] } = useQuery({ queryKey: ["patients"], queryFn: () => PatientsService.list() });
 
   const submitRefundMut = useMutation({
-    mutationFn: RefundsAPI.submit,
+    mutationFn: RefundsService.submit,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["refunds"] });
@@ -205,7 +205,7 @@ function CreateInvoiceModal({ open, onClose, patients, onCreated }: any) {
       toast.error("Sélectionnez un patient et au moins un acte");
       return;
     }
-    await InvoicesAPI.create({
+    await BillingService.create({
       patientId: patient.id, patientName: `${patient.firstName} ${patient.lastName}`,
       lines, subtotal, insuranceCover, patientShare, total: subtotal,
       scope: "CONSULTATION",

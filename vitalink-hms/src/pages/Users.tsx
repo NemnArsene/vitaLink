@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, UserCog, Shield, Activity, Stethoscope, User as UserIcon, Receipt, Crown, Users as UsersIcon, ListChecks, FlaskConical, Wallet, Pill } from "lucide-react";
-import { UsersAPI } from "@/api/client";
+import { UsersService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
@@ -34,10 +34,10 @@ export default function Users() {
   const [createOpen, setCreateOpen] = useState(false);
   const [filterRole, setFilterRole] = useState("ALL");
 
-  const { data: users = [] } = useQuery({ queryKey: ["users"], queryFn: UsersAPI.list });
+  const { data: users = [] } = useQuery({ queryKey: ["users"], queryFn: UsersService.list });
 
   const createMut = useMutation({
-    mutationFn: UsersAPI.create,
+    mutationFn: UsersService.create,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["users"] }); setCreateOpen(false); toast.success("Utilisateur créé"); },
   });
 

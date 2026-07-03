@@ -11,7 +11,7 @@ import { StatCard } from "@/components/ui/Stat";
 import { Avatar } from "@/components/ui/Avatar";
 import { usePermission } from "@/hooks/usePermission";
 import { toast } from "sonner";
-import { PersonnelAPI } from "@/api/http-client";
+import { PersonnelService } from "@/services";
 
 type Staff = { id: string; firstName: string; lastName: string; email: string; role: string; service: string; specialty?: string; phone: string; statut: string; employeeId: string; reportsTo?: string; dailyPatientLimit?: number };
 
@@ -55,7 +55,7 @@ export default function Personnel() {
   const loadStaff = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await PersonnelAPI.list();
+      const data = await PersonnelService.list();
       const raw = data?.data || data?.results || data || [];
       const items = (Array.isArray(raw) ? raw : []).map(toApiStaff);
       setStaff(items);
@@ -88,7 +88,7 @@ export default function Personnel() {
         dailyPatientLimit: s.dailyPatientLimit,
       };
       if (s.employeeId) dto.employeeId = s.employeeId;
-      const created = await PersonnelAPI.create(dto);
+      const created = await PersonnelService.create(dto);
       setStaff(prev => [toApiStaff(created), ...prev]);
       setOpen(false);
       toast.success("Employé créé");

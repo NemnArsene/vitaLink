@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Role, Permission } from "@/types";
 import { ROLE_PERMISSIONS } from "@/types";
-import { AuthAPI } from "@/api/http-client";
+import { AuthService } from "@/services";
 
 export type Theme = "light" | "dark";
 
@@ -41,8 +41,18 @@ export const useAuthStore = create<AuthState>()(
       login: (user) => set({ user, isAuthenticated: true }),
       loginWithCredentials: async (email: string, password: string) => {
         try {
-          const result = await AuthAPI.login(email, password);
+          const result = await AuthService.login(email, password);
           const roleMap: Record<string, Role> = {
+            admin_hopital: "ROLE_ADMIN_HOSPITAL",
+            medecin: "ROLE_DOCTOR",
+            agent_accueil: "ROLE_RECEPTIONIST",
+            infirmiere_triage: "ROLE_TRIAGE",
+            laborantin: "ROLE_LABORATORY",
+            infirmier_soins: "ROLE_NURSE",
+            responsable_facturation: "ROLE_BILLING",
+            directeur_hopital: "ROLE_DIRECTOR",
+            pharmacien: "ROLE_PHARMACIST",
+            // Keep uppercase mappings as fallback
             ADMIN_HOPITAL: "ROLE_ADMIN_HOSPITAL",
             MEDECIN: "ROLE_DOCTOR",
             RECEPTIONIST: "ROLE_RECEPTIONIST",
@@ -53,12 +63,13 @@ export const useAuthStore = create<AuthState>()(
             BILLING: "ROLE_BILLING",
             DIRECTOR: "ROLE_DIRECTOR",
           };
+          const rawRole = result.user.role || "";
           const apiUser: AuthUser = {
             id: result.user.id,
             firstName: result.user.prenom || result.user.email.split("@")[0],
             lastName: result.user.nom || "",
             email: result.user.email,
-            role: roleMap[result.user.role] || ("ROLE_" + result.user.role) as Role,
+            role: roleMap[rawRole] || roleMap[rawRole.toUpperCase()] || ("ROLE_" + rawRole.toUpperCase()) as Role,
             service: result.user.service || "Général",
             token: result.accessToken,
           };
@@ -67,7 +78,14 @@ export const useAuthStore = create<AuthState>()(
           throw new Error("Échec de connexion");
         }
       },
-      logout: () => set({ user: null, isAuthenticated: false }),
+      logout: async () => {
+        try {
+          await AuthService.logout();
+        } catch (e) {
+          console.error("Erreur lors de la déconnexion:", e);
+        }
+        set({ user: null, isAuthenticated: false });
+      },
       setTheme: (theme) => set({ theme }),
       toggleTheme: () => set({ theme: get().theme === "light" ? "dark" : "light" }),
       toggleSidebar: () => set({ sidebarCollapsed: !get().sidebarCollapsed }),

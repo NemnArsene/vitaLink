@@ -76,6 +76,15 @@ export class Personnel extends BaseSchema {
 
   @Prop()
   notes: string;
+
+  @Prop({ required: true })
+  entityId: string;
+
+  @Prop({ required: true })
+  password: string;
+
+  @Prop({ type: [String], default: [] })
+  permissions: string[];
 }
 
 export const PersonnelSchema = SchemaFactory.createForClass(Personnel);

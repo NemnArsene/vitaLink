@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Pill, AlertTriangle, Package, DollarSign, Plus, Minus } from "lucide-react";
-import { PharmacyAPI } from "@/api/client";
+import { PharmacyService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -29,10 +29,10 @@ export default function Pharmacie() {
   const [stockModal, setStockModal] = useState<{ item: PharmacyItem; type: "in" | "out" } | null>(null);
   const [stockQty, setStockQty] = useState(0);
 
-  const { data: items = [] } = useQuery({ queryKey: ["pharmacy"], queryFn: PharmacyAPI.list });
+  const { data: items = [] } = useQuery({ queryKey: ["pharmacy"], queryFn: PharmacyService.list });
 
   const updateStockMut = useMutation({
-    mutationFn: ({ id, stock }: { id: string; stock: number }) => PharmacyAPI.updateStock(id, stock),
+    mutationFn: ({ id, stock }: { id: string; stock: number }) => PharmacyService.updateStock(id, stock),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["pharmacy"] });
       setStockModal(null);

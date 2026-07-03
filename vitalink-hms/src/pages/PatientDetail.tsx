@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Phone, Mail, MapPin, AlertTriangle, FileText, Heart, Calendar, Plus, Shield, User as UserIcon } from "lucide-react";
-import { PatientsAPI, MedicalRecordsAPI, ConsultationsAPI, InvoicesAPI } from "@/api/client";
+import { PatientsService, MedicalRecordsService, ConsultationsService, BillingService } from "@/services";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { StatusBadge, Badge } from "@/components/ui/Badge";
@@ -21,17 +21,17 @@ export default function PatientDetail() {
   const [allergyOpen, setAllergyOpen] = useState(false);
   const [condOpen, setCondOpen] = useState(false);
 
-  const { data: patient, isLoading } = useQuery({ queryKey: ["patient", id], queryFn: () => PatientsAPI.get(id!), enabled: !!id });
-  const { data: record } = useQuery({ queryKey: ["record", id], queryFn: () => MedicalRecordsAPI.getByPatient(id!), enabled: !!id });
-  const { data: consultations = [] } = useQuery({ queryKey: ["consultations"], queryFn: ConsultationsAPI.list });
-  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: InvoicesAPI.list });
+  const { data: patient, isLoading } = useQuery({ queryKey: ["patient", id], queryFn: () => PatientsService.get(id!), enabled: !!id });
+  const { data: record } = useQuery({ queryKey: ["record", id], queryFn: () => MedicalRecordsService.getByPatient(id!), enabled: !!id });
+  const { data: consultations = [] } = useQuery({ queryKey: ["consultations"], queryFn: ConsultationsService.list });
+  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: BillingService.list });
 
   const addAllergyMut = useMutation({
-    mutationFn: (a: any) => MedicalRecordsAPI.addAllergy(id!, a),
+    mutationFn: (a: any) => MedicalRecordsService.addAllergy(id!, a),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["record", id] }); setAllergyOpen(false); toast.success("Allergie ajoutée"); },
   });
   const addCondMut = useMutation({
-    mutationFn: (c: any) => MedicalRecordsAPI.addCondition(id!, c),
+    mutationFn: (c: any) => MedicalRecordsService.addCondition(id!, c),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["record", id] }); setCondOpen(false); toast.success("Antécédent ajouté"); },
   });
 

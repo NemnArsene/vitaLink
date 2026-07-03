@@ -12,7 +12,7 @@ import { Modal } from "../components/ui/Modal";
 import { DataTable } from "../components/ui/Table";
 import { Avatar } from "../components/ui/States";
 import { useInsureds, useDeleteInsured, useCreateInsured, useUpdateInsured } from "../hooks/useApi";
-import { ExportAPI } from "../api/http-client";
+import { ExportService } from "../services";
 import { formatCurrency, formatNumber } from "../utils/cn";
 import { differenceInYears, format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -69,7 +69,7 @@ export function Insureds() {
     return matchSearch && matchStatus && matchCity && matchDate;
   });
 
-  const handleExport = () => { ExportAPI.csv("assures"); };
+  const handleExport = () => { ExportService.csv("assures"); };
 
   const form = useForm<InsuredForm>({
     resolver: zodResolver(insuredSchema),

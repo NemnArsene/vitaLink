@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Activity, FlaskConical, ScanLine, Stethoscope } from "lucide-react";
-import { ActsAPI } from "@/api/client";
+import { ActsService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge, Badge } from "@/components/ui/Badge";
@@ -10,7 +10,7 @@ const TYPE_ICON = { CARE: Stethoscope, EXAM: Activity, IMAGING: ScanLine, LAB: F
 const TYPE_COLOR: Record<string, "info" | "warning" | "primary" | "success"> = { CARE: "success", EXAM: "primary", IMAGING: "info", LAB: "warning" };
 
 export default function Acts() {
-  const { data: acts = [] } = useQuery({ queryKey: ["acts"], queryFn: ActsAPI.list });
+  const { data: acts = [] } = useQuery({ queryKey: ["acts"], queryFn: ActsService.list });
 
   const stats = {
     CARE: acts.filter(a => a.type === "CARE").length,

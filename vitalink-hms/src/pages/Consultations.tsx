@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { Plus, Stethoscope } from "lucide-react";
-import { ConsultationsAPI, PatientsAPI } from "@/api/client";
+import { ConsultationsService, PatientsService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
@@ -30,11 +30,11 @@ export default function Consultations() {
   const [searchParams] = useSearchParams();
   const preselectedPatientId = searchParams.get("patient");
 
-  const { data: consultations = [] } = useQuery({ queryKey: ["consultations"], queryFn: ConsultationsAPI.list });
-  const { data: patients = [] } = useQuery({ queryKey: ["patients"], queryFn: () => PatientsAPI.list() });
+  const { data: consultations = [] } = useQuery({ queryKey: ["consultations"], queryFn: ConsultationsService.list });
+  const { data: patients = [] } = useQuery({ queryKey: ["patients"], queryFn: () => PatientsService.list() });
 
   const createMut = useMutation({
-    mutationFn: ConsultationsAPI.create,
+    mutationFn: ConsultationsService.create,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["consultations"] }); setOpen(false); toast.success("Consultation créée"); },
   });
 

@@ -123,7 +123,7 @@ export function Dashboard() {
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
                   <Pie data={charts?.claimsByStatus} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={2} dataKey="value">
-                    {charts?.claimsByStatus.map((entry) => (
+                    {(charts?.claimsByStatus ?? []).map((entry) => (
                       <Cell key={entry.date} fill={STATUS_COLORS[entry.category || "received"]} stroke="none" />
                     ))}
                   </Pie>
@@ -132,7 +132,7 @@ export function Dashboard() {
               </ResponsiveContainer>
             )}
             <div className="mt-4 space-y-1.5">
-              {charts?.claimsByStatus.map((s) => (
+              {(charts?.claimsByStatus ?? []).map((s) => (
                 <div key={s.date} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: STATUS_COLORS[s.category || "received"] }} />

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Label, Textarea } from "@/components/ui/Input";
 import { cn } from "@/utils/cn";
-import { MessagesAPI, PersonnelAPI } from "@/api/http-client";
+import { MessagingService, PersonnelService } from "@/services";
 
 interface ApiMessage {
   _id: string;
@@ -126,9 +126,9 @@ export default function Messages() {
     try {
       setLoading(true);
       const [personnel, inbox, sent] = await Promise.all([
-        PersonnelAPI.list().catch(() => []),
-        MessagesAPI.inbox(meId).catch(() => []),
-        MessagesAPI.sent(meId).catch(() => []),
+        PersonnelService.list().catch(() => []),
+        MessagingService.inbox(meId).catch(() => []),
+        MessagingService.sent(meId).catch(() => []),
       ]);
       const contactList: Contact[] = (Array.isArray(personnel) ? personnel : []).map((p: any) => ({
         id: p._id || p.id,
@@ -163,7 +163,7 @@ export default function Messages() {
     if (!conv) return;
     const unreadIds = conv.messages.filter(m => m.fromId !== meId && !m.read).map(m => m.id);
     if (unreadIds.length > 0) {
-      await Promise.all(unreadIds.map(id => MessagesAPI.markRead(id).catch(() => {})));
+      await Promise.all(unreadIds.map(id => MessagingService.markRead(id).catch(() => {})));
       setConversations(prev => prev.map(c =>
         c.contactId === contactId
           ? { ...c, unread: 0, messages: c.messages.map(m => m.fromId !== meId ? { ...m, read: true } : m) }
@@ -176,7 +176,7 @@ export default function Messages() {
     if (!replyText.trim() || !activeContactId || !authUser) return;
     const contact = contacts.find(c => c.id === activeContactId);
     try {
-      const created = await MessagesAPI.send({
+      const created = await MessagingService.send({
         senderId: meId,
         senderName: meName,
         senderRole: meRole,
@@ -206,7 +206,7 @@ export default function Messages() {
     if (!contactId || !text || !authUser) return;
     const contact = contacts.find(c => c.id === contactId);
     try {
-      const created = await MessagesAPI.send({
+      const created = await MessagingService.send({
         senderId: meId,
         senderName: meName,
         senderRole: meRole,
