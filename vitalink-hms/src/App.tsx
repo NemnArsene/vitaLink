@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
 import { useTheme } from "@/hooks/useTheme";
@@ -80,6 +81,7 @@ export default function App() {
       <BrowserRouter>
         <ThemedApp />
         <Toaster position="top-right" richColors closeButton />
+        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
       </BrowserRouter>
     </QueryClientProvider>
   );
