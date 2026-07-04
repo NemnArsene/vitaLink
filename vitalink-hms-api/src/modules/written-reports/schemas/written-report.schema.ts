@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { Document } from 'mongoose';
 import { BaseSchema } from '../../../common/schemas/base.schema';
 
 export type WrittenReportDocument = WrittenReport & Document;
@@ -12,10 +12,10 @@ export class WrittenReport extends BaseSchema {
   @Prop({ required: true })
   content: string;
 
-  @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'Personnel' })
+  @Prop({ required: true })
   authorId: string;
 
-  @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'Personnel' })
+  @Prop({ required: true })
   recipientId: string;
 
   @Prop({ default: 'draft', enum: ['draft', 'sent'] })

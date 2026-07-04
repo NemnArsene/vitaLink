@@ -7,6 +7,7 @@ export * from "./refunds.service";
 export * from "./personnel.service";
 export * from "./reports.service";
 export * from "./dashboard.service";
+export * from "./prescriptions.service";
 export * from "./import-export.service";
 export * from "./messaging.service";
 export * from "./settings.service";

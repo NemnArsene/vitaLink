@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Receipt, Download, Send, Eye, ShieldCheck, Printer } from "lucide-react";
-import { BillingService, RefundsService, PatientsService } from "@/services";
+import { BillingService, PatientsService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
@@ -24,12 +24,12 @@ export default function Billing() {
   const { data: patients = [] } = useQuery({ queryKey: ["patients"], queryFn: () => PatientsService.list() });
 
   const submitRefundMut = useMutation({
-    mutationFn: RefundsService.submit,
+    mutationFn: BillingService.submitToInsurance,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["refunds"] });
       setRefundOpen(null);
-      toast.success("Demande de remboursement soumise via API Gateway");
+      toast.success("Demande de remboursement soumise");
     },
   });
 

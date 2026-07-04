@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { ConsultationsService } from './consultations.service';
 import { CreateConsultationDto, UpdateConsultationDto } from './dto/consultation.dto';
@@ -53,8 +53,14 @@ export class ConsultationsController {
     return this.consultationsService.findOne(id);
   }
 
+  @Put(':id')
+  @ApiOperation({ summary: 'Update consultation (full replace)' })
+  updatePut(@Param('id') id: string, @Body() dto: UpdateConsultationDto) {
+    return this.consultationsService.update(id, dto);
+  }
+
   @Patch(':id')
-  @ApiOperation({ summary: 'Update consultation' })
+  @ApiOperation({ summary: 'Update consultation (partial)' })
   update(@Param('id') id: string, @Body() dto: UpdateConsultationDto) {
     return this.consultationsService.update(id, dto);
   }

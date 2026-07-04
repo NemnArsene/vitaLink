@@ -77,7 +77,17 @@ export default function Consultations() {
         onClose={() => setOpen(false)}
         patients={patients}
         loading={createMut.isPending}
-        onSubmit={(c: any) => createMut.mutate(c)}
+        onSubmit={(c: any) => {
+          const p = patients.find((x: any) => x.id === c.patientId);
+          createMut.mutate({
+            patientId: c.patientId,
+            patientName: p ? `${p.firstName} ${p.lastName}` : "",
+            medicalRecordNumber: p?.fileNumber || "",
+            doctorName: c.doctorName,
+            reason: c.reason,
+            diagnostic: c.diagnosis || undefined,
+          });
+        }}
         preselectedPatientId={preselectedPatientId}
       />
     </div>

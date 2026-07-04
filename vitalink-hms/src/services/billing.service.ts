@@ -25,6 +25,11 @@ export const BillingService = {
     return data.data;
   },
   
+  create: async (dto: any) => {
+    const { data } = await coreHttpClient.post("/billing/invoices", dto);
+    return data.data;
+  },
+
   createInvoice: async (dto: any) => {
     const { data } = await coreHttpClient.post("/billing/invoices", dto);
     return data.data;
@@ -32,6 +37,11 @@ export const BillingService = {
   
   updateInvoice: async (id: string, dto: any) => {
     const { data } = await coreHttpClient.put(`/billing/invoices/${id}`, dto);
+    return data.data;
+  },
+
+  submitToInsurance: async (id: string) => {
+    const { data } = await coreHttpClient.post(`/billing/invoices/${id}/submit`);
     return data.data;
   }
 };

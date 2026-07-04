@@ -108,7 +108,7 @@ export function DataTable<T>({
           </thead>
           <tbody>
             {paginated.length === 0 ? (
-              <tr>
+              <tr key="empty">
                 <td colSpan={columns.length}>
                   <EmptyState icon={emptyIcon} title={emptyTitle} description={emptyDescription} />
                 </td>

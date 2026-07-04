@@ -1,25 +1,22 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Printer, FileText, Pill, Clock } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
-import { Input, Label, Textarea } from "@/components/ui/Input";
+import { Input, Label, Textarea, Select } from "@/components/ui/Input";
 import { StatCard } from "@/components/ui/Stat";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatDate } from "@/lib/format";
 import { usePermission } from "@/hooks/usePermission";
+import { PrescriptionsService, PatientsService } from "@/services";
 import { toast } from "sonner";
 
 type Medicament = { medicament: string; dosage: string; frequence: string; duree: string };
 type Prescription = { id: string; patientName: string; doctorName: string; diagnosis: string; prescriptionDate: string; isValid: boolean; medicaments: Medicament[] };
-
-const MOCK_PRESCRIPTIONS: Prescription[] = [
-  { id: "rx-1", patientName: "Mariama Cissé", doctorName: "Dr. Mamadou Sow", diagnosis: "Infection respiratoire", prescriptionDate: new Date().toISOString(), isValid: true, medicaments: [{ medicament: "Amoxicilline 500mg", dosage: "1 comprimé", frequence: "3x/jour", duree: "7 jours" }] },
-  { id: "rx-2", patientName: "Ousmane Diallo", doctorName: "Dr. Awa Mbaye", diagnosis: "Hypertension artérielle", prescriptionDate: new Date(Date.now() - 86400000).toISOString(), isValid: true, medicaments: [{ medicament: "Amlodipine 5mg", dosage: "1 comprimé", frequence: "1x/jour", duree: "30 jours" }] },
-  { id: "rx-3", patientName: "Fatou Ndiaye", doctorName: "Dr. Mamadou Sow", diagnosis: "Diabète type 2", prescriptionDate: new Date(Date.now() - 2 * 86400000).toISOString(), isValid: true, medicaments: [{ medicament: "Metformine 850mg", dosage: "1 comprimé", frequence: "2x/jour", duree: "90 jours" }] },
-];
 
 function generatePrescriptionHTML(p: Prescription): string {
   const meds = p.medicaments.map(m =>
@@ -55,13 +52,20 @@ function printPrescription(p: Prescription) {
 
 export default function Ordonnances() {
   const { can } = usePermission();
-  const [prescriptions, setPrescriptions] = useState(MOCK_PRESCRIPTIONS);
   const [open, setOpen] = useState(false);
   const [viewRx, setViewRx] = useState<Prescription | null>(null);
 
+  const { data: prescriptions = [] } = useQuery({
+    queryKey: ["prescriptions"],
+    queryFn: PrescriptionsService.list,
+  });
+
+  const { data: patients = [] } = useQuery({
+    queryKey: ["patients"],
+    queryFn: () => PatientsService.list(),
+  });
+
   const addPrescription = (p: Prescription) => {
-    setPrescriptions([p, ...prescriptions]);
-    setOpen(false);
     printPrescription(p);
   };
 
@@ -76,7 +80,7 @@ export default function Ordonnances() {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard label="Ordonnances actives" value={prescriptions.filter(r => r.isValid).length} icon={<FileText className="h-5 w-5" />} color="primary" />
         <StatCard label="Prescriptions" value={prescriptions.reduce((s, r) => s + r.medicaments.length, 0)} icon={<Pill className="h-5 w-5" />} color="info" />
-        <StatCard label="À renouveler" value={prescriptions.filter(r => !r.isValid).length || "2"} icon={<Clock className="h-5 w-5" />} color="warning" />
+        <StatCard label="À renouveler" value={prescriptions.filter(r => !r.isValid).length} icon={<Clock className="h-5 w-5" />} color="warning" />
       </div>
 
       <DataTable
@@ -146,17 +150,36 @@ export default function Ordonnances() {
         </Modal>
       )}
 
-      <NewPrescriptionModal open={open} onClose={() => setOpen(false)} onCreated={addPrescription} />
+      <NewPrescriptionModal
+        open={open}
+        onClose={() => setOpen(false)}
+        patients={patients}
+        onCreated={addPrescription}
+      />
     </div>
   );
 }
 
-function NewPrescriptionModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (p: Prescription) => void }) {
-  const [patientName, setPatientName] = useState("");
+function NewPrescriptionModal({ open, onClose, patients, onCreated }: { open: boolean; onClose: () => void; patients: any[]; onCreated: (p: Prescription) => void }) {
+  const user = useAuthStore(s => s.user);
+  const qc = useQueryClient();
+  const [patientId, setPatientId] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [meds, setMeds] = useState<Medicament[]>([]);
   const [medForm, setMedForm] = useState<Medicament>({ medicament: "", dosage: "", frequence: "", duree: "" });
   const [instructions, setInstructions] = useState("");
+
+  const patient = patients.find((p: any) => p.id === patientId);
+  const doctorName = user ? `${user.firstName} ${user.lastName}`.trim() || user.email : "Dr. Utilisateur";
+
+  const createMut = useMutation({
+    mutationFn: PrescriptionsService.create,
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ["prescriptions"] });
+      if (result) onCreated(result);
+      onClose();
+    },
+  });
 
   const addMed = () => {
     if (!medForm.medicament.trim()) { toast.error("Nom du médicament requis"); return; }
@@ -165,24 +188,32 @@ function NewPrescriptionModal({ open, onClose, onCreated }: { open: boolean; onC
   };
 
   const submit = () => {
-    if (!patientName.trim() || !diagnosis.trim()) { toast.error("Patient et diagnostic requis"); return; }
+    if (!patientId || !diagnosis.trim()) { toast.error("Patient et diagnostic requis"); return; }
     if (meds.length === 0) { toast.error("Ajoutez au moins un médicament"); return; }
-    onCreated({
-      id: `rx-${Date.now()}`,
-      patientName: patientName.trim(),
-      doctorName: "Dr. Utilisateur",
+    createMut.mutate({
+      patientId: patient.id,
+      patientName: `${patient.firstName} ${patient.lastName}`,
+      medicalRecordNumber: patient.fileNumber || "",
+      doctorName,
       diagnosis: diagnosis.trim(),
-      prescriptionDate: new Date().toISOString(),
-      isValid: true,
       medicaments: meds,
+      notes: instructions.trim() || undefined,
     });
   };
 
   return (
     <Modal open={open} onClose={onClose} title="Nouvelle ordonnance" size="lg"
-      footer={<><Button variant="ghost" onClick={onClose}>Annuler</Button><Button onClick={submit}><Printer className="h-4 w-4" /> Créer et imprimer</Button></>}>
+      footer={<><Button variant="ghost" onClick={onClose}>Annuler</Button><Button onClick={submit} loading={createMut.isPending}><Printer className="h-4 w-4" /> Créer et imprimer</Button></>}>
       <div className="space-y-3">
-        <div><Label required>Patient</Label><Input value={patientName} onChange={e => setPatientName(e.target.value)} placeholder="Rechercher un patient..." /></div>
+        <div>
+          <Label required>Patient</Label>
+          <Select value={patientId} onChange={e => setPatientId(e.target.value)}>
+            <option value="">Sélectionner un patient...</option>
+            {patients.map((p: any) => (
+              <option key={p.id} value={p.id}>{p.firstName} {p.lastName} {p.insuranceCompany ? `— ${p.insuranceCompany}` : ""}</option>
+            ))}
+          </Select>
+        </div>
         <div><Label required>Diagnostic</Label><Input value={diagnosis} onChange={e => setDiagnosis(e.target.value)} /></div>
         <div className="rounded-lg border border-[var(--border)] p-4">
           <h4 className="text-sm font-semibold mb-3">Médicaments</h4>
