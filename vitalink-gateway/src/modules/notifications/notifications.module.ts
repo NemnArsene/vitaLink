@@ -6,7 +6,7 @@ import { NotificationsService } from './notifications.service';
 @Module({
   imports: [
     JwtModule.register({
-      secret: process.env.JWT_ACCESS_SECRET || 'default-secret',
+      secret: process.env.SERVICE_JWT_SECRET || 'shared-jwt-secret',
       signOptions: { expiresIn: '1h' },
     }),
   ],

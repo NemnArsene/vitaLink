@@ -117,7 +117,8 @@ export class AuthService {
           throw new UnauthorizedException('Hospital is not whitelisted by the insurance');
         }
       } catch (error) {
-        this.logger.warn(`Failed to verify hospital whitelist: ${error.message}`);
+        const msg = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Failed to verify hospital whitelist: ${msg}`);
         // Allow login if IMS is down in dev, otherwise we would block it
       }
     }
@@ -285,7 +286,7 @@ export class AuthService {
     };
 
     return this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_ACCESS_SECRET', 'default-secret'),
+      secret: this.configService.get<string>('app.serviceJwtSecret', 'shared-jwt-secret'),
       expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION', '15m'),
     });
   }

@@ -29,7 +29,7 @@ import { TokenBlacklist, TokenBlacklistSchema } from './schemas/token-blacklist.
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_ACCESS_SECRET'),
+        secret: configService.get<string>('app.serviceJwtSecret', 'shared-jwt-secret'),
         signOptions: { expiresIn: configService.get('JWT_ACCESS_EXPIRATION', '15m') },
       }),
     }),

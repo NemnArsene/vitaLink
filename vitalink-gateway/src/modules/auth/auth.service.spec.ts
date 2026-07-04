@@ -14,7 +14,7 @@ describe('AuthService', () => {
   const mockConfigService = {
     get: jest.fn((key: string, defaultValue?: any) => {
       const config: Record<string, any> = {
-        JWT_ACCESS_SECRET: 'test-access-secret',
+        'app.serviceJwtSecret': 'test-access-secret',
         JWT_ACCESS_EXPIRATION: '15m',
       };
       return config[key] || defaultValue;
