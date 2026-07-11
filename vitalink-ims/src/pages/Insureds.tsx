@@ -81,15 +81,28 @@ export function Insureds() {
     },
   });
 
-  const onSubmit = (data: InsuredForm) => {
-    if (editing) {
-      updateInsured.mutate({ id: editing.id, data });
-    } else {
-      createInsured.mutate(data as Partial<Insured>);
+  const sanitize = (d: InsuredForm) => {
+    const out = { ...d } as any;
+    for (const k of Object.keys(out)) {
+      if (out[k] === "") out[k] = undefined;
     }
-    setModalOpen(false);
-    setEditing(null);
-    form.reset();
+    return out;
+  };
+
+  const onSubmit = async (data: InsuredForm) => {
+    const payload = sanitize(data);
+    try {
+      if (editing) {
+        await updateInsured.mutateAsync({ id: editing.id, data: payload });
+      } else {
+        await createInsured.mutateAsync(payload);
+      }
+      setModalOpen(false);
+      setEditing(null);
+      form.reset();
+    } catch {
+      /* toast handled by onError */
+    }
   };
 
   const handleEdit = (insured: Insured) => {
@@ -133,6 +146,13 @@ export function Insureds() {
           <p className="text-xs text-slate-700 dark:text-slate-300">{i.email}</p>
           <p className="text-xs text-slate-500">{i.phone}</p>
         </div>
+      ),
+    },
+    {
+      key: "insurance",
+      header: "Assurance",
+      cell: (i: Insured) => (
+        <span className="text-xs text-slate-600 dark:text-slate-400">{i.providerName || "—"}</span>
       ),
     },
     {
@@ -337,6 +357,7 @@ export function Insureds() {
               <Field label="Téléphone" value={viewInsured.phone} />
               <Field label="Date de naissance" value={format(new Date(viewInsured.birthDate), "dd MMMM yyyy", { locale: fr })} />
               <Field label="Âge" value={`${differenceInYears(new Date(), new Date(viewInsured.birthDate))} ans`} />
+              <Field label="Assurance" value={viewInsured.providerName || "—"} />
               <Field label="Ville" value={viewInsured.city} />
               <Field label="Code postal" value={viewInsured.postalCode} />
               <Field label="N° SS" value={viewInsured.socialSecurityNumber} className="col-span-2" />

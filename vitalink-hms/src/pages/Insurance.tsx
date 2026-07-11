@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ShieldCheck, FileCheck, Building2, Network, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, FileCheck, Building2, Network, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { InsuranceService } from "@/services";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -7,8 +7,8 @@ import { StatusBadge, Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/format";
 
 export default function Insurance() {
-  const { data: companies = [] } = useQuery({ queryKey: ["insurance-companies"], queryFn: InsuranceService.companies });
-  const { data: contracts = [] } = useQuery({ queryKey: ["insurance-contracts"], queryFn: InsuranceService.contracts });
+  const { data: companies = [], isLoading: loadingCompanies, error: companiesError } = useQuery({ queryKey: ["insurance-companies"], queryFn: InsuranceService.companies });
+  const { data: contracts = [], isLoading: loadingContracts, error: contractsError } = useQuery({ queryKey: ["insurance-contracts"], queryFn: InsuranceService.contracts });
 
   return (
     <div className="space-y-6">
@@ -57,6 +57,22 @@ export default function Insurance() {
           </div>
         </CardContent>
       </Card> */}
+
+      {(loadingCompanies || loadingContracts) && (
+        <div className="flex items-center justify-center py-8">
+          <RefreshCw className="h-6 w-6 animate-spin" style={{ color: "var(--text-muted)" }} />
+        </div>
+      )}
+
+      {(companiesError || contractsError) && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-red-800">Erreur de chargement</p>
+            <p className="text-xs text-red-600">Impossible de charger les données d'assurance. Veuillez vérifier votre connexion et réessayer.</p>
+          </div>
+        </div>
+      )}
 
       <Card>
         <CardHeader><CardTitle>Compagnies partenaires ({companies.length})</CardTitle></CardHeader>

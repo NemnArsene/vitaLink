@@ -43,3 +43,30 @@ export class PayClaimDto {
   @IsString()
   notes?: string;
 }
+
+export class DisputeClaimDto {
+  @ApiProperty()
+  @IsString()
+  reason: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  description?: string;
+}
+
+export class ResolveDisputeDto {
+  @ApiProperty({ enum: ['approuvee', 'rejetee'] })
+  @IsEnum(['approuvee', 'rejetee'])
+  resolution: 'approuvee' | 'rejetee';
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  montantApprouve?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}

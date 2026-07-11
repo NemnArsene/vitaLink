@@ -27,6 +27,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { DossiersMedicauxModule } from './modules/dossiers-medicaux/dossiers-medicaux.module';
 import { WrittenReportsModule } from './modules/written-reports/written-reports.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { InsuranceModule } from './modules/insurance/insurance.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { AuthModule } from './modules/auth/auth.module';
     DossiersMedicauxModule,
     WrittenReportsModule,
     AuthModule,
+    InsuranceModule,
   ],
   providers: [
     JwtStrategy,

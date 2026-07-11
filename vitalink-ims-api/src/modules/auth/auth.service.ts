@@ -115,7 +115,10 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
-      app: 'IMS',
+      scope: 'scope:insurance',
+      entityId: 'ims-001',
+      entityType: 'insurance',
+      permissions: ['*'],
     };
     return this.jwtService.sign(payload, { secret, expiresIn: '3600s' });
   }

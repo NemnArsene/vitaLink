@@ -20,6 +20,7 @@ import { ImportExportImsModule } from './modules/import-export-ims/import-export
 import { MessagingImsModule } from './modules/messaging-ims/messaging-ims.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { WrittenReportsImsModule } from './modules/written-reports-ims/written-reports-ims.module';
+import { InvoicesModule } from './modules/invoices/invoice.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { WrittenReportsImsModule } from './modules/written-reports-ims/written-r
     ImportExportImsModule,
     MessagingImsModule,
     WrittenReportsImsModule,
+    InvoicesModule,
   ],
   providers: [
     JwtStrategy,

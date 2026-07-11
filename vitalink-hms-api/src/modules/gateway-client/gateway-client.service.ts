@@ -18,6 +18,7 @@ export interface ClaimSubmission {
     dateActe?: Date;
   }>;
   montantTotal: number;
+  insuranceCardNumber?: string;
 }
 
 export interface ClaimResponse {
@@ -91,7 +92,13 @@ export class GatewayClientService {
           { headers: this.getHeaders() },
         ),
       );
-      return response.data;
+      const body = response.data;
+      const payload = body?.data ?? body;
+      return {
+        claimId: payload?._id ?? payload?.claimId ?? payload?.id ?? '',
+        status: payload?.statut ?? payload?.status ?? 'unknown',
+        message: body?.message ?? 'Claim submitted',
+      };
     } catch (error) {
       this.logger.error(`Failed to submit claim: ${error.message}`);
       throw error;

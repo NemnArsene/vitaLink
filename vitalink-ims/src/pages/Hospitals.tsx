@@ -1,16 +1,36 @@
 import { useState } from "react";
-import { Building2, Search, MapPin, Phone, Mail, Star, FileText, Plus } from "lucide-react";
+import { Building2, Search, MapPin, Phone, Mail, Star, FileText, Plus, Trash2 } from "lucide-react";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Card, CardContent } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input, Select } from "../components/ui/Input";
 import { Badge } from "../components/ui/Badge";
 import { Modal } from "../components/ui/Modal";
-import { useHospitals, useConventions } from "../hooks/useApi";
+import { useHospitals, useConventions, useCreateHospital, useDeleteHospital } from "../hooks/useApi";
 import { formatNumber } from "../utils/cn";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import type { Hospital } from "../types";
+
+const hospitalSchema = z.object({
+  name: z.string().min(2, "Nom requis"),
+  code: z.string().min(2, "Code requis"),
+  type: z.enum(["public", "private", "clinic", "university"]),
+  tier: z.coerce.number().min(1).max(3),
+  address: z.string().min(2, "Adresse requise"),
+  city: z.string().min(2, "Ville requise"),
+  postalCode: z.string().min(2, "Code postal requis"),
+  phone: z.string().min(6, "Téléphone requis"),
+  email: z.string().email("Email invalide"),
+  director: z.string().min(2, "Directeur requis"),
+  bedCapacity: z.coerce.number().min(1, "Capacité requise"),
+  specialties: z.string().optional(),
+});
+
+type HospitalForm = z.infer<typeof hospitalSchema>;
 
 const typeVariant: Record<Hospital["type"], "info" | "violet" | "success" | "warning"> = {
   public: "info",
@@ -29,10 +49,36 @@ const typeLabel: Record<Hospital["type"], string> = {
 export function Hospitals() {
   const { data: hospitals = [], isLoading } = useHospitals();
   const { data: conventions = [] } = useConventions();
+  const createHospital = useCreateHospital();
+  const deleteHospital = useDeleteHospital();
   const [search, setSearch] = useState("");
   const [tierFilter, setTierFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [view, setView] = useState<Hospital | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const hospitalForm = useForm<HospitalForm>({
+    resolver: zodResolver(hospitalSchema),
+    defaultValues: {
+      type: "public",
+      tier: 2,
+      bedCapacity: 50,
+      specialties: "",
+    },
+  });
+
+  const onSubmitHospital = async (data: HospitalForm) => {
+    try {
+      await createHospital.mutateAsync({
+        ...data,
+        specialties: data.specialties ? data.specialties.split(",").map((s) => s.trim()) : [],
+      });
+      setCreateOpen(false);
+      hospitalForm.reset();
+    } catch {
+      /* toast handled by onError */
+    }
+  };
 
   const filtered = hospitals.filter((h) => {
     const matchSearch = !search || `${h.name} ${h.city} ${h.code}`.toLowerCase().includes(search.toLowerCase());
@@ -55,7 +101,7 @@ export function Hospitals() {
         description="Gestion du réseau d'hôpitaux partenaires et conventions"
         icon={<Building2 className="h-5 w-5" />}
         actions={
-          <Button icon={<Plus className="h-4 w-4" />}>Ajouter un partenaire</Button>
+          <Button icon={<Plus className="h-4 w-4" />} onClick={() => setCreateOpen(true)}>Ajouter un partenaire</Button>
         }
       />
 
@@ -152,7 +198,16 @@ export function Hospitals() {
                       <span className={`h-2 w-2 rounded-full ${h.active ? "bg-emerald-500" : "bg-slate-400"}`} />
                       <span className="text-[10px] text-slate-500">{h.active ? "Actif" : "Inactif"}</span>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => setView(h)}>Détails →</Button>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => setView(h)}>Détails →</Button>
+                      <button
+                        onClick={() => { if (confirm(`Supprimer ${h.name} ?`)) deleteHospital.mutate(h.id); }}
+                        className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600 dark:hover:bg-slate-800"
+                        aria-label="Supprimer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -207,6 +262,44 @@ export function Hospitals() {
             </div>
           </div>
         )}
+      </Modal>
+
+      <Modal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Ajouter un hôpital partenaire"
+        description="Créer une nouvelle convention d'hospitalisation"
+        size="lg"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setCreateOpen(false)}>Annuler</Button>
+            <Button onClick={hospitalForm.handleSubmit(onSubmitHospital)} loading={createHospital.isPending}>Créer</Button>
+          </>
+        }
+      >
+        <form className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Input label="Nom" required {...hospitalForm.register("name")} />
+          <Input label="Code" required {...hospitalForm.register("code")} />
+          <Select label="Type" required {...hospitalForm.register("type")} options={[
+            { value: "public", label: "Public" },
+            { value: "private", label: "Privé" },
+            { value: "clinic", label: "Clinique" },
+            { value: "university", label: "CHU" },
+          ]} />
+          <Select label="Niveau (Tier)" required {...hospitalForm.register("tier", { valueAsNumber: true })} options={[
+            { value: "1", label: "Tier 1 - Premium" },
+            { value: "2", label: "Tier 2 - Standard" },
+            { value: "3", label: "Tier 3 - Basique" },
+          ]} />
+          <Input label="Adresse" required className="md:col-span-2" {...hospitalForm.register("address")} />
+          <Input label="Ville" required {...hospitalForm.register("city")} />
+          <Input label="Code postal" required {...hospitalForm.register("postalCode")} />
+          <Input label="Téléphone" required {...hospitalForm.register("phone")} />
+          <Input label="Email" type="email" required {...hospitalForm.register("email")} />
+          <Input label="Directeur" required {...hospitalForm.register("director")} />
+          <Input label="Capacité (lits)" type="number" required {...hospitalForm.register("bedCapacity", { valueAsNumber: true })} />
+          <Input label="Spécialités (séparées par des virgules)" className="md:col-span-2" {...hospitalForm.register("specialties")} />
+        </form>
       </Modal>
     </div>
   );

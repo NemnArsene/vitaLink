@@ -1,7 +1,7 @@
-import { Controller, Get, Param, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Param, Post, Put, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ClaimsProcessingService } from './claims-processing.service';
-import { ApproveClaimDto, RejectClaimDto, AnalyzeClaimDto, PayClaimDto } from './dto/claim-action.dto';
+import { ApproveClaimDto, RejectClaimDto, AnalyzeClaimDto, PayClaimDto, DisputeClaimDto, ResolveDisputeDto } from './dto/claim-action.dto';
 import { CreateClaimDto } from './dto/create-claim.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -19,8 +19,8 @@ export class ClaimsProcessingController {
   @Get()
   @Scopes(Scope.INSURANCE)
   @ApiOperation({ summary: 'Get all insurance claims' })
-  findAll(@Query() pagination: PaginationDto) {
-    return this.claimsProcessingService.findAll(pagination);
+  findAll(@Query('status') status?: string, @Query() pagination?: PaginationDto) {
+    return this.claimsProcessingService.findAll(status, pagination);
   }
 
   @Post()
@@ -67,5 +67,21 @@ export class ClaimsProcessingController {
   @ApiOperation({ summary: 'Pay an approved claim (DIRECTEUR only) — status: approuvee → remboursee' })
   pay(@Param('id') id: string, @Body() dto: PayClaimDto, @CurrentUser() user: JwtPayload) {
     return this.claimsProcessingService.pay(id, dto, user?.sub);
+  }
+
+  @Put(':id/dispute')
+  @Scopes(Scope.INSURANCE)
+  @Roles('MANAGER', 'DIRECTEUR')
+  @ApiOperation({ summary: 'Flag a claim as disputed (MANAGER or DIRECTEUR only)' })
+  dispute(@Param('id') id: string, @Body() dto: DisputeClaimDto, @CurrentUser() user: JwtPayload) {
+    return this.claimsProcessingService.dispute(id, dto, user?.sub);
+  }
+
+  @Post(':id/resolve-dispute')
+  @Scopes(Scope.INSURANCE)
+  @Roles('DIRECTEUR')
+  @ApiOperation({ summary: 'Resolve a disputed claim (DIRECTEUR only) — status: litige → approuvee or rejetee' })
+  resolveDispute(@Param('id') id: string, @Body() dto: ResolveDisputeDto, @CurrentUser() user: JwtPayload) {
+    return this.claimsProcessingService.resolveDispute(id, dto, user?.sub);
   }
 }

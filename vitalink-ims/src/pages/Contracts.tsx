@@ -23,12 +23,12 @@ const contractSchema = z.object({
   productName: z.string().min(2, "Produit requis"),
   startDate: z.string().min(1, "Date de début requise"),
   endDate: z.string().min(1, "Date de fin requise"),
-  monthlyPremium: z.number().min(1, "Prime requise"),
-  coverageAmount: z.number().min(1, "Couverture requise"),
+  monthlyPremium: z.coerce.number().min(1, "Prime requise"),
+  coverageAmount: z.coerce.number().min(1, "Couverture requise"),
   paymentFrequency: z.enum(["monthly", "quarterly", "annual"]),
   status: z.enum(["active", "pending", "suspended", "terminated", "expired"]),
-  deductible: z.number().min(0),
-  commission: z.number().min(0).max(100),
+  deductible: z.coerce.number().min(0),
+  commission: z.coerce.number().min(0).max(100),
   notes: z.string().optional(),
 });
 
@@ -87,17 +87,24 @@ export function Contracts() {
       status: "pending", deductible: 0, commission: 10,
     },
   });
+  const errors = form.formState.errors;
 
-  const onSubmit = (data: ContractForm) => {
-    createContract.mutate({
-      ...data,
-      annualPremium: data.monthlyPremium * 12,
-      remainingCoverage: data.coverageAmount,
-      guarantees: ["GRT-001", "GRT-002", "GRT-003"],
-      agentId: "USR-0001",
-    } as Partial<Contract>);
-    setModalOpen(false);
-    form.reset();
+  const onSubmit = async (data: ContractForm) => {
+    try {
+      const insured = insureds.find((i) => i.id === data.insuredId);
+      await createContract.mutateAsync({
+        ...data,
+        annualPremium: data.monthlyPremium * 12,
+        remainingCoverage: data.coverageAmount,
+        guarantees: ["GRT-001", "GRT-002", "GRT-003"],
+        agentId: "USR-0001",
+        subscriberName: insured ? `${insured.firstName} ${insured.lastName}` : "Souscripteur",
+      } as any);
+      setModalOpen(false);
+      form.reset();
+    } catch (e) {
+      console.error("Contract creation failed:", e);
+    }
   };
 
   const suspendContract = (c: Contract) => {
@@ -283,17 +290,17 @@ export function Contracts() {
         }
       >
         <form className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Select label="Assuré" required className="md:col-span-2" {...form.register("insuredId")} options={[
+          <Select label="Assuré" required className="md:col-span-2" error={errors.insuredId?.message} {...form.register("insuredId")} options={[
             { value: "", label: "Sélectionner un assuré..." },
             ...insureds.map((i) => ({ value: i.id, label: `${i.firstName} ${i.lastName} - ${i.matricule}` })),
           ]} />
-          <Select label="Type de contrat" required {...form.register("type")} options={[
+          <Select label="Type de contrat" required error={errors.type?.message} {...form.register("type")} options={[
             { value: "individual", label: "Individuel" },
             { value: "family", label: "Famille" },
             { value: "group", label: "Groupe" },
             { value: "enterprise", label: "Entreprise" },
           ]} />
-          <Select label="Produit" required {...form.register("productName")} options={[
+          <Select label="Produit" required error={errors.productName?.message} {...form.register("productName")} options={[
             { value: "Santé Essentielle", label: "Santé Essentielle" },
             { value: "Santé Confort", label: "Santé Confort" },
             { value: "Santé Premium", label: "Santé Premium" },
@@ -301,22 +308,22 @@ export function Contracts() {
             { value: "Santé Senior", label: "Santé Senior" },
             { value: "Santé Entreprise", label: "Santé Entreprise" },
           ]} />
-          <Input label="Date de début" type="date" required {...form.register("startDate")} />
-          <Input label="Date de fin" type="date" required {...form.register("endDate")} />
-          <Input label="Prime mensuelle (€)" type="number" required {...form.register("monthlyPremium")} />
-          <Select label="Fréquence de paiement" required {...form.register("paymentFrequency")} options={[
+          <Input label="Date de début" type="date" required error={errors.startDate?.message} {...form.register("startDate")} />
+          <Input label="Date de fin" type="date" required error={errors.endDate?.message} {...form.register("endDate")} />
+          <Input label="Prime mensuelle (€)" type="number" required error={errors.monthlyPremium?.message} {...form.register("monthlyPremium")} />
+          <Select label="Fréquence de paiement" required error={errors.paymentFrequency?.message} {...form.register("paymentFrequency")} options={[
             { value: "monthly", label: "Mensuel" },
             { value: "quarterly", label: "Trimestriel" },
             { value: "annual", label: "Annuel" },
           ]} />
-          <Input label="Plafond de couverture (€)" type="number" required {...form.register("coverageAmount")} />
-          <Input label="Franchise (€)" type="number" {...form.register("deductible")} />
-          <Input label="Commission (%)" type="number" {...form.register("commission")} />
-          <Select label="Statut" required {...form.register("status")} options={[
+          <Input label="Plafond de couverture (€)" type="number" required error={errors.coverageAmount?.message} {...form.register("coverageAmount")} />
+          <Input label="Franchise (€)" type="number" error={errors.deductible?.message} {...form.register("deductible")} />
+          <Input label="Commission (%)" type="number" error={errors.commission?.message} {...form.register("commission")} />
+          <Select label="Statut" required error={errors.status?.message} {...form.register("status")} options={[
             { value: "pending", label: "En attente" },
             { value: "active", label: "Actif" },
           ]} />
-          <Textarea label="Notes" className="md:col-span-2" rows={3} {...form.register("notes")} />
+          <Textarea label="Notes" className="md:col-span-2" rows={3} error={errors.notes?.message} {...form.register("notes")} />
         </form>
       </Modal>
 

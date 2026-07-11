@@ -29,7 +29,7 @@ function generateReceiptHTML(inv: Invoice, method: PaymentMethod, amount: number
     .footer{margin-top:32px;font-size:10px;color:#999;text-align:center;border-top:1px solid #ddd;padding-top:12px}
     table{width:100%}td{padding:4px 8px}.total{font-weight:700;font-size:15px}
     </style></head><body>
-    <h1>Hôpital Général de Dakar</h1>
+    <h1>Hôpital Général de Douala</h1>
     <h2>Reçu de paiement · ${inv.number} · ${formatDate(inv.issuedAt)}</h2>
     <table><tr><td><strong>Patient:</strong></td><td>${inv.patientName}</td></tr>
     <tr><td><strong>Montant total:</strong></td><td>${formatCurrency(inv.total)}</td></tr>
@@ -37,7 +37,7 @@ function generateReceiptHTML(inv: Invoice, method: PaymentMethod, amount: number
     <tr class="total"><td><strong>Payé:</strong></td><td>${formatCurrency(amount)}</td></tr>
     <tr><td><strong>Mode:</strong></td><td>${method === "cash" ? "Espèces" : method === "card" ? "Carte" : method === "mobile" ? "Mobile Money" : "Chèque"}</td></tr>
     <tr><td><strong>Date:</strong></td><td>${new Date().toLocaleDateString("fr-FR")}</td></tr></table>
-    <div class="footer">Merci de votre confiance · VitaLink · Hôpital Général de Dakar</div>
+    <div class="footer">Merci de votre confiance · VitaLink · Hôpital Général de Douala</div>
     </body></html>`;
 }
 

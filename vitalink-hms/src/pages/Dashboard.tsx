@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Users, UserPlus, Receipt, Banknote, TrendingUp, BedDouble, Activity, AlertCircle, Calendar, Building2 } from "lucide-react";
+import { Users, UserPlus, Receipt, Banknote, TrendingUp, BedDouble, Activity, AlertCircle, Calendar, Building2, ShieldCheck } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import { DashboardService } from "@/services";
 import { StatCard } from "@/components/ui/Stat";
@@ -28,7 +28,7 @@ export default function Dashboard() {
     { name: "NSIA Assurances", value: 32 },
     { name: "SUNU Assurances", value: 24 },
     { name: "AXA Afrique", value: 18 },
-    { name: "CNSS Sénégal", value: 14 },
+    { name: "CNAMGS", value: 14 },
     { name: "Allianz Africa", value: 12 },
   ];
 
@@ -54,6 +54,42 @@ export default function Dashboard() {
         <StatCard label="Revenus" value={formatCurrency(kpi.monthlyRevenue)} icon={<TrendingUp className="h-5 w-5" />} trend={kpi.trends.revenue} trendLabel="janvier" color="success" />
         <StatCard label="Occupation" value={`${kpi.bedOccupancyRate}%`} icon={<BedDouble className="h-5 w-5" />} trend={kpi.trends.occupancy} trendLabel="lits" color="primary" />
       </div>
+
+      {/* Réclamations insurance */}
+      <Card className="overflow-hidden border-0 bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-lg dark:from-teal-700 dark:to-teal-600">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-teal-100" />
+                <span className="text-sm font-semibold text-teal-100">Réclamations soumises à l'assurance</span>
+              </div>
+              <div className="flex items-baseline gap-4 mt-2">
+                <div>
+                  <span className="text-3xl font-bold">{kpi.totalClaims ?? 0}</span>
+                  <span className="ml-1 text-sm text-teal-200">totales</span>
+                </div>
+                <div className="h-8 w-px bg-teal-400/40" />
+                <div>
+                  <span className="text-2xl font-bold text-amber-200">{kpi.pendingClaims ?? 0}</span>
+                  <span className="ml-1 text-sm text-teal-200">en attente</span>
+                </div>
+                <div className="h-8 w-px bg-teal-400/40" />
+                <div>
+                  <span className="text-2xl font-bold text-emerald-200">{kpi.approvedClaims ?? 0}</span>
+                  <span className="ml-1 text-sm text-teal-200">approuvées</span>
+                </div>
+                <div className="h-8 w-px bg-teal-400/40" />
+                <div>
+                  <span className="text-2xl font-bold text-rose-200">{kpi.rejectedClaims ?? 0}</span>
+                  <span className="ml-1 text-sm text-teal-200">rejetées</span>
+                </div>
+              </div>
+            </div>
+            <Link to="/refunds" className="text-xs font-medium text-teal-100 hover:text-white underline underline-offset-4">Voir détails →</Link>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Charts row */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

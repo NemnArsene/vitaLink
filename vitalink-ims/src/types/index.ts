@@ -4,6 +4,10 @@ export type Role =
   | "ROLE_INSURANCE_AGENT"
   | "ROLE_SUPERVISOR"
   | "ROLE_DIRECTOR"
+  | "ROLE_DIRECTEUR"
+  | "ROLE_MANAGER"
+  | "ROLE_LIQUIDATEUR"
+  | "ROLE_ANALYSTE"
   | "ROLE_AUDITOR";
 
 export interface Permission {
@@ -45,6 +49,7 @@ export interface Insured {
   postalCode: string;
   socialSecurityNumber: string;
   contractId: string;
+  providerName?: string;
   joinDate: string;
   status: "active" | "suspended" | "terminated" | "pending";
   dependents: number;
@@ -148,6 +153,7 @@ export interface Convention {
 // ============= Remboursements =============
 export type ClaimStatus =
   | "received"
+  | "pending"
   | "under_review"
   | "approved"
   | "rejected"
@@ -160,6 +166,8 @@ export interface ReimbursementClaim {
   id: string;
   reference: string;
   insuredId: string;
+  patientName: string;
+  invoiceNumber: string;
   contractId: string;
   hospitalId: string;
   submissionDate: string;

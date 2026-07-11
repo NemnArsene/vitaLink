@@ -447,4 +447,56 @@ gantt
 
 ---
 
+---
+
+## 12. Suivi du Développement — Statut Actuel
+
+> *Dernière mise à jour : 5 juillet 2026*
+
+### ✅ Terminé
+
+#### 🔧 API Gateway (port 3000)
+- [x] Proxy service : retourne `{ statusCode, data }` au lieu de throw — les erreurs 4xx/5xx aval sont transmises proprement
+- [x] Contrôleurs HMS / IMS : utilisent `res.status().json()` au lieu de laisser NestJS gérer les exceptions
+
+#### 🏥 MVP Hôpital — Frontend (`vitalink-hms`)
+- [x] `gateway-http-client.ts` : intercepteur de rafraîchissement de token (catch 401 → `POST /auth/refresh` → retry)
+- [x] `authStore.ts` : ajout du champ `refreshToken` dans `AuthUser`
+- [x] `Insurance.tsx` : spinner de chargement + bannière d'erreur
+
+#### 🏥 MVP Hôpital — API (`vitalink-hms-api`, port 3001)
+- [x] `InsuranceModule` créé avec `GET /insurance/companies` (6 compagnies mock) et `GET /insurance/contracts` (5 contrats mock)
+- [x] Correction TS4053 : les interfaces `InsuranceCompany` et `InsuranceContract` sont désormais exportées
+
+#### 🏢 MVP Assurance — Frontend (`vitalink-ims`)
+- [x] `Login.tsx` : utilise `useAuthStore.loginWithCredentials()` (plus de `localStorage.setItem` manuel)
+- [x] `ProtectedRoute` : composant de garde d'authentification
+- [x] `App.tsx` : routes protégées enveloppées dans `ProtectedRoute`
+- [x] `base-http-client.ts` : exclut les URLs `/auth/` de la redirection 401
+
+#### 🏢 MVP Assurance — API (`vitalink-ims-api`, port 3002)
+- [x] Serveur démarré et fonctionnel
+
+### 🔄 En cours
+- (aucune tâche en cours actuellement)
+
+### ❌ Bloqué
+- (aucun blocage actif — le TS4053 vient d'être corrigé)
+
+### 📋 Prochaines étapes
+1. Redémarrer le HMS API (port 3001) après le fix TS4053
+2. Vérifier que `GET /insurance/companies` et `GET /insurance/contracts` sont accessibles via la Gateway
+3. Tester le flux de rafraîchissement de token sur le frontend HMS (attendre l'expiration JWT 15 min → appel à `/auth/refresh`)
+4. Implémenter les vrais endpoints métier (patients, actes, facturation, remboursements)
+
+### 🔑 Contexte critique
+- Secret JWT par défaut : `shared-jwt-secret` (pas de `.env` — pas de mismatch possible)
+- Expiration JWT HMS API : 1 heure
+- Expiration JWT Gateway : 15 minutes
+- Auth frontend IMS : directe (appelle l'API IMS sur le port 3002, pas la Gateway)
+- Auth frontend HMS : via la Gateway (port 3000)
+- Clés de persist store Zustand : `hms-auth` et `medisure-auth`
+
+---
+
 *Document produit le 13 juin 2026 — Architecture Système Santé · Confidentiel*

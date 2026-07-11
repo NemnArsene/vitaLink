@@ -20,6 +20,8 @@ export class PoliciesService {
       ...createPolicyDto,
       statut: 'active',
       dateDebut: createPolicyDto.dateDebut || new Date(),
+      annualPremium: createPolicyDto.monthlyPremium ? createPolicyDto.monthlyPremium * 12 : 0,
+      remainingCoverage: createPolicyDto.coverageAmount || 5000000,
     });
     return policy.save();
   }

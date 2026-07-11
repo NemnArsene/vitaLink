@@ -49,6 +49,12 @@ export class Invoice extends BaseSchema {
   rejectionReason: string;
 
   @Prop()
+  insuranceCardNumber: string;
+
+  @Prop()
+  insuranceProvider: string;
+
+  @Prop()
   notes: string;
 }
 

@@ -23,6 +23,7 @@ const navItems: NavItem[] = [
   { to: "/guarantees", label: "Garanties", icon: ShieldCheck, section: "Pilotage" },
   { to: "/hospitals", label: "Réseau Hôpitaux", icon: Building2, section: "Réseau" },
   { to: "/claims", label: "Remboursements", icon: Receipt, badge: "12", section: "Réseau" },
+  { to: "/invoices", label: "Factures", icon: FileText, section: "Réseau" },
   { to: "/reports", label: "Reporting", icon: BarChart3, section: "Analyse" },
   { to: "/activity", label: "Activité", icon: Activity, section: "Analyse" },
   { to: "/messages", label: "Messages", icon: MessageSquare, section: "Analyse" },

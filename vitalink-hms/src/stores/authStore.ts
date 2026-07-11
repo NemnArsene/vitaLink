@@ -15,6 +15,7 @@ export interface AuthUser {
   service: string;
   avatar?: string;
   token?: string;
+  refreshToken?: string;
   coreToken?: string;
 }
 
@@ -73,6 +74,7 @@ export const useAuthStore = create<AuthState>()(
             role: roleMap[rawRole] || roleMap[rawRole.toUpperCase()] || ("ROLE_" + rawRole.toUpperCase()) as Role,
             service: result.user.service || "Général",
             token: result.accessToken,
+            refreshToken: result.refreshToken,
           };
 
           // En mode gateway, on récupère aussi un token pour le core API

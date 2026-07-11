@@ -56,6 +56,33 @@ export class Policy extends BaseSchema {
 
   @Prop()
   email: string;
+
+  @Prop({ default: 0 })
+  monthlyPremium: number;
+
+  @Prop({ default: 0 })
+  annualPremium: number;
+
+  @Prop({ default: 5000000 })
+  coverageAmount: number;
+
+  @Prop({ default: 5000000 })
+  remainingCoverage: number;
+
+  @Prop({ default: 0 })
+  deductible: number;
+
+  @Prop({ default: 0 })
+  commission: number;
+
+  @Prop({ default: 'monthly', enum: ['monthly', 'quarterly', 'annual'] })
+  paymentFrequency: string;
+
+  @Prop()
+  agentId: string;
+
+  @Prop()
+  notes: string;
 }
 
 export const PolicySchema = SchemaFactory.createForClass(Policy);

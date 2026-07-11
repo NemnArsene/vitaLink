@@ -10,13 +10,19 @@ export class CreateInsuredDto {
   @IsString()
   lastName: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  insuredNumber: string;
+  insuredNumber?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsString()
+  birthDate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   dateOfBirth?: string;
 
   @ApiPropertyOptional({ enum: ['M', 'F', 'OTHER'] })
@@ -34,21 +40,25 @@ export class CreateInsuredDto {
   @IsEmail()
   email?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  policyId: string;
+  policyId?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  policyNumber: string;
+  policyNumber?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  providerName: string;
+  providerName?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  insuranceCardNumber: string;
+  insuranceCardNumber?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -57,13 +67,43 @@ export class CreateInsuredDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsString()
   dateAffiliation?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsString()
   dateFinCouverture?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  maritalStatus?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  postalCode?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  socialSecurityNumber?: string;
+
+  @ApiPropertyOptional({ enum: ['active', 'suspended', 'terminated', 'pending'] })
+  @IsOptional()
+  @IsEnum(['active', 'suspended', 'terminated', 'pending'])
+  status?: string;
 }
 
 export class UpdateInsuredDto {
@@ -94,6 +134,46 @@ export class UpdateInsuredDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsString()
   dateFinCouverture?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  birthDate?: string;
+
+  @ApiPropertyOptional({ enum: ['M', 'F', 'OTHER'] })
+  @IsOptional()
+  @IsEnum(['M', 'F', 'OTHER'])
+  gender?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  maritalStatus?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  postalCode?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  socialSecurityNumber?: string;
+
+  @ApiPropertyOptional({ enum: ['active', 'suspended', 'terminated', 'pending'] })
+  @IsOptional()
+  @IsEnum(['active', 'suspended', 'terminated', 'pending'])
+  status?: string;
 }

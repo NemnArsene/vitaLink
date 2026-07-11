@@ -18,16 +18,62 @@ export class BillingService {
 
   async create(createInvoiceDto: CreateInvoiceDto): Promise<InvoiceDocument> {
     const invoiceNumber = await this.generateInvoiceNumber();
-    const montantTotal = createInvoiceDto.actes.reduce((sum, acte) => sum + acte.montant, 0);
+    const items = createInvoiceDto.actes || createInvoiceDto.lines || [];
+    const montantTotal = createInvoiceDto.total ?? createInvoiceDto.subtotal ?? items.reduce((sum: number, item: any) => sum + (item.montant ?? item.total ?? item.unitPrice ?? 0), 0);
 
     const invoice = new this.invoiceModel({
-      ...createInvoiceDto,
       invoiceNumber,
+      patientId: createInvoiceDto.patientId,
+      patientName: createInvoiceDto.patientName,
+      hospitalId: createInvoiceDto.hospitalId || 'HOP-001',
+      actes: items.map((item: any) => ({
+        acte: item.acte ?? item.label ?? item.description ?? '',
+        code: item.code ?? item.actId ?? item.id ?? '',
+        description: item.description ?? item.label ?? '',
+        montant: item.montant ?? item.total ?? item.unitPrice ?? 0,
+        dateActe: item.dateActe ?? createInvoiceDto.issuedAt ?? new Date(),
+      })),
       montantTotal,
-      statut: 'brouillon',
+      montantRembourse: createInvoiceDto.insuranceCover ?? 0,
+      insuranceCardNumber: createInvoiceDto.insuranceNumber ?? '',
+      insuranceProvider: createInvoiceDto.insuranceCompany ?? '',
+      notes: createInvoiceDto.notes ?? '',
     });
 
-    return invoice.save();
+    const saved = await invoice.save();
+
+    // Automatique : transmettre à l'assurance si la facture a une couverture
+    if ((createInvoiceDto.insuranceCover ?? 0) > 0) {
+      try {
+        const claimResponse = await this.gatewayClient.submitClaim({
+          invoiceId: (saved as any)._id.toString(),
+          invoiceNumber: saved.invoiceNumber,
+          patientId: saved.patientId.toString(),
+          patientName: saved.patientName,
+          hospitalId: saved.hospitalId,
+          actes: saved.actes.map((a) => ({
+            acte: a.acte,
+            code: a.code,
+            description: a.description,
+            montant: a.montant,
+            dateActe: a.dateActe,
+          })),
+          montantTotal: saved.montantTotal,
+          insuranceCardNumber: saved.insuranceCardNumber || undefined,
+        });
+
+        saved.statut = 'soumise';
+        saved.submittedAt = new Date();
+        saved.insuranceClaimId = claimResponse.claimId;
+        await saved.save();
+
+        this.logger.log(`Invoice ${saved.invoiceNumber} auto-submitted to insurance`);
+      } catch (error) {
+        this.logger.error(`Auto-submit failed for invoice ${saved.invoiceNumber}: ${error.message}`);
+      }
+    }
+
+    return saved;
   }
 
   async findAll(pagination: PaginationDto): Promise<PaginatedResult<InvoiceDocument>> {
@@ -59,7 +105,6 @@ export class BillingService {
       throw new Error('Only draft invoices can be submitted');
     }
 
-    // Send claim to gateway
     try {
       const claimResponse = await this.gatewayClient.submitClaim({
         invoiceId: (invoice as any)._id.toString(),
@@ -67,8 +112,15 @@ export class BillingService {
         patientId: invoice.patientId.toString(),
         patientName: invoice.patientName,
         hospitalId: invoice.hospitalId,
-        actes: invoice.actes,
+        actes: invoice.actes.map((a) => ({
+          acte: a.acte,
+          code: a.code,
+          description: a.description,
+          montant: a.montant,
+          dateActe: a.dateActe,
+        })),
         montantTotal: invoice.montantTotal,
+        insuranceCardNumber: invoice.insuranceCardNumber || undefined,
       });
 
       invoice.statut = 'soumise';

@@ -2,8 +2,13 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsEnum, IsOptional, IsNumber } from 'class-validator';
 
 export class ClaimDecisionDto {
-  @ApiProperty({ enum: ['approved', 'rejected'] })
-  @IsEnum(['approved', 'rejected'])
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  claimId?: string;
+
+  @ApiProperty({ enum: ['approved', 'rejected', 'paid', 'disputed'] })
+  @IsEnum(['approved', 'rejected', 'paid', 'disputed'])
   decision: string;
 
   @ApiProperty()

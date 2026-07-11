@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck, Activity, Sparkles, LogIn, KeyRound } from "lucide-react";
 import { Button } from "../components/ui/Button";
-import { AuthService } from "../services";
+import { useAuthStore } from "../store";
 import { motion, AnimatePresence } from "framer-motion";
 
 const IMS_USERS = [
@@ -24,33 +24,14 @@ export default function Login() {
   const [selected, setSelected] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const loginWithCredentials = useAuthStore((s) => s.loginWithCredentials);
 
   const handleLogin = async () => {
     const user = IMS_USERS[selected];
     setLoading(true);
     setError("");
     try {
-      const result = await AuthService.login(user.email, PASSWORDS[user.email]);
-      localStorage.setItem(
-        "medisure-auth",
-        JSON.stringify({
-          state: {
-            currentUser: {
-              id: result.user.id,
-              email: result.user.email,
-              fullName: `${result.user.prenom} ${result.user.nom}`,
-              role: `ROLE_${result.user.role}`,
-              department: user.label,
-              active: true,
-              lastLogin: new Date().toISOString(),
-              permissions: ["*"],
-              createdAt: "2023-01-15T08:00:00Z",
-            },
-            isAuthenticated: true,
-            token: result.accessToken,
-          },
-        }),
-      );
+      await loginWithCredentials(user.email, PASSWORDS[user.email]);
       nav("/");
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "Échec de connexion (Serveur injoignable)");

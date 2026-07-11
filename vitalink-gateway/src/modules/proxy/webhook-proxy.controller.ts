@@ -16,7 +16,7 @@ export class WebhookProxyController {
   @ApiResponse({ status: 200, description: 'Webhook forwarded to HMS' })
   async forwardToHms(@Body() dto: WebhookDto) {
     this.logger.log(`Forwarding webhook to HMS: ${dto.eventType || 'unknown'}`);
-    return this.proxyService.postHms('/webhooks/gateway', dto);
+    return this.proxyService.postHms('/api/v1/webhooks/gateway', dto);
   }
 
   @Post('ims')
@@ -25,6 +25,6 @@ export class WebhookProxyController {
   @ApiResponse({ status: 200, description: 'Webhook forwarded to IMS' })
   async forwardToIms(@Body() dto: WebhookDto) {
     this.logger.log(`Forwarding webhook to IMS: ${dto.eventType || 'unknown'}`);
-    return this.proxyService.postIms('/webhooks/gateway', dto);
+    return this.proxyService.postIms('/api/v1/webhooks/gateway', dto);
   }
 }

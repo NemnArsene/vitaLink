@@ -1,48 +1,168 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber, IsArray, ValidateNested, IsDateString, IsMongoId } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsNumber, IsArray, Min } from 'class-validator';
 
 class ActeDto {
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  acte: string;
-
-  @ApiProperty()
-  @IsString()
-  code: string;
-
-  @ApiProperty()
-  @IsString()
-  description: string;
-
-  @ApiProperty()
-  @IsNumber()
-  montant: number;
+  acte?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsString()
+  code?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  montant?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   dateActe?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  id?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  actId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  quantity?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  unitPrice?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  total?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  label?: string;
+}
+
+class LineDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  id?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  actId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  quantity?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  unitPrice?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  total?: number;
 }
 
 export class CreateInvoiceDto {
   @ApiProperty()
-  @IsMongoId()
+  @IsString()
   patientId: string;
 
   @ApiProperty()
   @IsString()
   patientName: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  hospitalId: string;
+  hospitalId?: string;
 
-  @ApiProperty({ type: [ActeDto] })
+  @ApiPropertyOptional({ type: [ActeDto] })
+  @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ActeDto)
-  actes: ActeDto[];
+  actes?: ActeDto[];
+
+  @ApiPropertyOptional({ type: [LineDto] })
+  @IsOptional()
+  @IsArray()
+  lines?: LineDto[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  subtotal?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  total?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  insuranceCover?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  patientShare?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  scope?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  issuedAt?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  dueDate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  insuranceCompany?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  insuranceNumber?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -51,15 +171,28 @@ export class CreateInvoiceDto {
 }
 
 export class UpdateInvoiceDto {
-  @ApiPropertyOptional({ type: [ActeDto] })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ActeDto)
-  actes?: ActeDto[];
-
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  statut?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  montantRembourse?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  insuranceCardNumber?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  insuranceProvider?: string;
 }

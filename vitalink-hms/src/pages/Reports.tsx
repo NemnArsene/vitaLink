@@ -81,7 +81,7 @@ function generateReportHTML(name: string, period: string, description: string, d
     <p>${description}</p>
     <table><thead><tr><th>Indicateur</th><th>Valeur</th></tr></thead>
     <tbody>${rows}</tbody></table>
-    <div class="footer">Document généré par VitaLink · Hôpital Général de Dakar</div>
+    <div class="footer">Document généré par VitaLink · Hôpital Général de Douala</div>
     </body></html>`;
 }
 

@@ -7,7 +7,7 @@ import * as jwt from 'jsonwebtoken';
 export interface ClaimDecision {
   claimId: string;
   claimNumber: string;
-  decision: 'approved' | 'rejected' | 'paid';
+  decision: 'approved' | 'rejected' | 'paid' | 'disputed';
   montantApprouve?: number;
   rejectionReason?: string;
   hospitalId: string;

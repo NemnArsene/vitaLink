@@ -126,6 +126,9 @@ export default function Patients() {
             </div>
           )},
           { key: "phone", label: "Téléphone" },
+          { key: "insuranceCompany", label: "Assurance", render: p => (
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>{p.insuranceCompany || "—"}</span>
+          )},
           { key: "insuranceStatus", label: "Couverture", render: p => {
             const status = p.insuranceStatus;
             if (status === "ASSURE") return (

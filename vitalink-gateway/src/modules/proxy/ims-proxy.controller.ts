@@ -17,7 +17,6 @@ export class ImsProxyController {
   @Scopes(Scope.INSURANCE, Scope.ADMIN)
   @ApiOperation({ summary: 'Proxy all requests to IMS API' })
   async proxy(@Req() req: Request, @Res() res: Response) {
-    // We need to strip the /ims part to forward as /api/v1/...
     const path = req.path.replace('/ims', '') || '/';
     const method = req.method as any;
     const originalUser = (req as any).user;
@@ -33,6 +32,6 @@ export class ImsProxyController {
       originalUser,
     });
 
-    res.json(result);
+    res.status(result.statusCode).json(result.data);
   }
 }

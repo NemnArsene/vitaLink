@@ -46,4 +46,49 @@ export class UpdatePolicyDto {
   @ValidateNested({ each: true })
   @Type(() => GarantieDto)
   garanties?: GarantieDto[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  monthlyPremium?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  annualPremium?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  coverageAmount?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  remainingCoverage?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  deductible?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  commission?: number;
+
+  @ApiPropertyOptional({ enum: ['monthly', 'quarterly', 'annual'] })
+  @IsOptional()
+  @IsEnum(['monthly', 'quarterly', 'annual'])
+  paymentFrequency?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  agentId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

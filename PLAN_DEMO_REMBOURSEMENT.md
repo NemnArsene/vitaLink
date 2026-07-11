@@ -158,7 +158,6 @@ La Gateway est utilisée **en interne** par le HMS API pour communiquer avec l'I
 - [ ] Créer prescription avec médicaments
 - [ ] Aperçu ordonnance imprimable
 
-
 ---
 
 ## Phase 3 — Facturation & Demande de Remboursement (Caissier)

@@ -56,4 +56,9 @@ export class SubmitClaimDto {
   @ApiProperty()
   @IsNumber()
   montantTotal: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  insuranceCardNumber?: string;
 }

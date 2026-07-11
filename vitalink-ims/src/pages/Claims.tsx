@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Receipt, Search, Download, CheckCircle2, XCircle, AlertTriangle, Eye, Clock, Euro, FileText } from "lucide-react";
+import { Receipt, Search, Download, CheckCircle2, XCircle, AlertTriangle, Eye, Clock, Euro, FileText, Gavel } from "lucide-react";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Card, CardContent } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -7,18 +7,19 @@ import { Input, Select, Textarea } from "../components/ui/Input";
 import { Badge } from "../components/ui/Badge";
 import { Modal } from "../components/ui/Modal";
 import { DataTable } from "../components/ui/Table";
-import { Avatar, Alert, Progress } from "../components/ui/States";
-import { useClaims, useInsureds, useHospitals, useProcessClaim, useContracts } from "../hooks/useApi";
+import { Avatar, Alert } from "../components/ui/States";
+import { useClaims, useInsureds, useHospitals, useProcessClaim, useDisputeClaim, useResolveDispute } from "../hooks/useApi";
 import { formatCurrency, formatNumber } from "../utils/cn";
 import { formatDistanceToNow, format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useAuthStore } from "../store"; // Hypothèse: store pour récupérer le rôle
-import type { ReimbursementClaim, Contract } from "../types";
+import { useAuthStore } from "../store";
+import type { ReimbursementClaim } from "../types";
 import type { Variant } from "../components/ui/Badge";
 
 const statusVariant: Record<ReimbursementClaim["status"], Variant> = {
   received: "brand",
-  under_review: "info",
+  pending: "info",
+  under_review: "warning",
   approved: "success",
   rejected: "danger",
   disputed: "warning",
@@ -32,24 +33,29 @@ const priorityVariant: Record<ReimbursementClaim["priority"], Variant> = {
   urgent: "danger",
 };
 
+type ActionType = "approve" | "reject" | "dispute" | "analyze" | "pay" | "resolve-dispute";
+
 export function Claims() {
   const { data: claims = [], isLoading } = useClaims();
   const { data: insureds = [] } = useInsureds();
   const { data: hospitals = [] } = useHospitals();
-  const { data: contracts = [] } = useContracts();
   const processClaim = useProcessClaim();
+  const disputeClaim = useDisputeClaim();
+  const resolveDispute = useResolveDispute();
   const user = useAuthStore((state) => state.currentUser);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [view, setView] = useState<ReimbursementClaim | null>(null);
-  const [actionModal, setActionModal] = useState<{ claim: ReimbursementClaim; action: "approve" | "reject" | "dispute" | "pay" } | null>(null);
+  const [actionModal, setActionModal] = useState<{ claim: ReimbursementClaim; action: ActionType } | null>(null);
   const [actionComment, setActionComment] = useState("");
+  const [resolveDisputeResolution, setResolveDisputeResolution] = useState<"approved" | "rejected">("approved");
+  const [resolveDisputeAmount, setResolveDisputeAmount] = useState<number>(0);
 
-  // Rôles avec accès aux actions opérationnelles
-  const canOperate = user?.role === "ROLE_INSURANCE_AGENT" || user?.role === "ROLE_SUPERVISOR";
-  const isDirector = user?.role === "ROLE_DIRECTOR";
+  const canOperate = user?.role === "ROLE_DIRECTEUR" || user?.role === "ROLE_MANAGER" || user?.role === "ROLE_LIQUIDATEUR" || user?.role === "ROLE_ANALYSTE";
+  const canReviewClaim = (status: ReimbursementClaim["status"]) => ["received", "pending", "under_review"].includes(status);
+  const canAnalyzeClaim = (status: ReimbursementClaim["status"]) => ["received", "pending"].includes(status);
 
   const filtered = claims.filter((c) => {
     const insured = insureds.find((i) => i.id === c.insuredId);
@@ -59,12 +65,14 @@ export function Claims() {
     return matchSearch && matchStatus && matchPriority;
   });
 
+  const disputes = claims.filter((c) => c.status === "disputed");
+
   const stats = {
     total: claims.length,
     pending: claims.filter((c) => ["received", "under_review"].includes(c.status)).length,
     approved: claims.filter((c) => c.status === "approved" || c.status === "paid").length,
     rejected: claims.filter((c) => c.status === "rejected").length,
-    disputed: claims.filter((c) => c.status === "disputed").length,
+    disputed: disputes.length,
     totalAmount: claims.reduce((s, c) => s + c.claimedAmount, 0),
     approvedAmount: claims.filter((c) => ["approved", "paid"].includes(c.status)).reduce((s, c) => s + c.approvedAmount, 0),
   };
@@ -85,12 +93,13 @@ export function Claims() {
       header: "Assuré",
       cell: (c: ReimbursementClaim) => {
         const insured = insureds.find((i) => i.id === c.insuredId);
+        const displayName = insured ? `${insured.firstName} ${insured.lastName}` : c.patientName || "—";
         return (
           <div className="flex items-center gap-2">
-            <Avatar name={insured ? `${insured.firstName} ${insured.lastName}` : "NA"} size="sm" />
+            <Avatar name={displayName} size="sm" />
             <div>
-              <p className="text-xs font-medium">{insured ? `${insured.firstName} ${insured.lastName}` : "—"}</p>
-              <p className="text-[10px] text-slate-500">{insured?.matricule}</p>
+              <p className="text-xs font-medium">{displayName}</p>
+              <p className="text-[10px] text-slate-500">{insured?.matricule || c.invoiceNumber}</p>
             </div>
           </div>
         );
@@ -138,7 +147,6 @@ export function Claims() {
       cell: (c: ReimbursementClaim) => (
         <div className="flex flex-col gap-1">
           <Badge variant={statusVariant[c.status]} dot>{c.status}</Badge>
-          {/* Badge Approbation Auto si traité par le système (ex: pas d'assignation) */}
           {c.status === "approved" && !c.assignedTo && (
             <Badge variant="success" size="sm" className="text-[9px]">Auto-approuvé</Badge>
           )}
@@ -149,21 +157,22 @@ export function Claims() {
       key: "actions",
       header: "",
       cell: (c: ReimbursementClaim) => (
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center justify-end gap-0.5">
           <button onClick={() => setView(c)} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800" aria-label="Voir">
             <Eye className="h-3.5 w-3.5" />
           </button>
-          {/* Actions visibles uniquement pour Agent/Supervisor et si en attente (received) */}
-          {canOperate && c.status === "received" && (
+          {canOperate && canReviewClaim(c.status) && (
             <>
+              {canAnalyzeClaim(c.status) && (
+                <button onClick={() => setActionModal({ claim: c, action: "analyze" })} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-cyan-600 dark:hover:bg-slate-800" aria-label="Mettre en révision">
+                  <Search className="h-3.5 w-3.5" />
+                </button>
+              )}
               <button onClick={() => setActionModal({ claim: c, action: "approve" })} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-800" aria-label="Approuver">
                 <CheckCircle2 className="h-3.5 w-3.5" />
               </button>
               <button onClick={() => setActionModal({ claim: c, action: "reject" })} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600 dark:hover:bg-slate-800" aria-label="Rejeter">
                 <XCircle className="h-3.5 w-3.5" />
-              </button>
-              <button onClick={() => setActionModal({ claim: c, action: "dispute" })} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-amber-600 dark:hover:bg-slate-800" aria-label="Litige">
-                <AlertTriangle className="h-3.5 w-3.5" />
               </button>
             </>
           )}
@@ -172,10 +181,75 @@ export function Claims() {
               <Euro className="h-3.5 w-3.5" />
             </button>
           )}
+          {canOperate && c.status === "rejected" && (
+            <button onClick={() => setActionModal({ claim: c, action: "dispute" })} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-amber-600 dark:hover:bg-slate-800" aria-label="Litige">
+              <AlertTriangle className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {canOperate && c.status === "disputed" && (
+            <button onClick={() => setActionModal({ claim: c, action: "resolve-dispute" })} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-800" aria-label="Résoudre litige">
+              <Gavel className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       ),
       align: "right" as const,
-      width: "160px",
+      width: "220px",
+    },
+  ];
+
+  const disputeColumns = [
+    {
+      key: "ref",
+      header: "Référence",
+      cell: (c: ReimbursementClaim) => (
+        <div>
+          <p className="text-xs font-mono font-semibold text-slate-900 dark:text-white">{c.reference}</p>
+          <p className="text-[10px] text-slate-500">{formatDistanceToNow(new Date(c.submissionDate), { addSuffix: true, locale: fr })}</p>
+        </div>
+      ),
+    },
+    {
+      key: "insured",
+      header: "Assuré",
+      cell: (c: ReimbursementClaim) => {
+        const insured = insureds.find((i) => i.id === c.insuredId);
+        return (
+          <div>
+            <p className="text-xs font-medium">{insured ? `${insured.firstName} ${insured.lastName}` : "—"}</p>
+            <p className="text-[10px] text-slate-500">{insured?.matricule}</p>
+          </div>
+        );
+      },
+    },
+    {
+      key: "amount",
+      header: "Montant",
+      cell: (c: ReimbursementClaim) => <span className="text-xs font-semibold">{formatCurrency(c.claimedAmount)}</span>,
+    },
+    {
+      key: "reason",
+      header: "Motif du litige",
+      cell: (c: ReimbursementClaim) => <span className="text-xs text-slate-600 dark:text-slate-400">{c.disputeReason || "—"}</span>,
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (c: ReimbursementClaim) => (
+        <div className="flex items-center justify-end gap-1">
+          <button onClick={() => setView(c)} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600 dark:hover:bg-slate-800" aria-label="Voir">
+            <Eye className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={() => { setResolveDisputeResolution("approved"); setResolveDisputeAmount(c.claimedAmount); setActionModal({ claim: c, action: "resolve-dispute" }); }} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-800" aria-label="Résoudre - Approuver">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={() => { setResolveDisputeResolution("rejected"); setActionModal({ claim: c, action: "resolve-dispute" }); }} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600 dark:hover:bg-slate-800" aria-label="Résoudre - Rejeter">
+            <XCircle className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ),
+      align: "right" as const,
+      width: "120px",
     },
   ];
 
@@ -186,9 +260,7 @@ export function Claims() {
         description="Réception, validation et suivi des demandes de remboursement"
         icon={<Receipt className="h-5 w-5" />}
         actions={
-          <>
-            <Button variant="outline" icon={<Download className="h-4 w-4" />}>Exporter</Button>
-          </>
+          <Button variant="outline" icon={<Download className="h-4 w-4" />}>Exporter</Button>
         }
       />
 
@@ -228,9 +300,28 @@ export function Claims() {
         </CardContent>
       </Card>
 
+      {/* Main table */}
       <Card>
         <DataTable columns={columns} data={filtered} loading={isLoading} rowKey={(c) => c.id} />
       </Card>
+
+      {/* Disputes section */}
+      {disputes.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="mb-4 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/30">
+                <Gavel className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Gestion des litiges IMS</h3>
+                <p className="text-[10px] text-slate-500">{disputes.length} litige(s) en cours nécessitant une résolution</p>
+              </div>
+            </div>
+            <DataTable columns={disputeColumns} data={disputes} loading={false} rowKey={(c) => `dispute-${c.id}`} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* View Modal */}
       <Modal open={!!view} onClose={() => setView(null)} title="Détails de la demande" size="xl">
@@ -315,6 +406,8 @@ export function Claims() {
           actionModal?.action === "approve" ? "Approuver la demande" :
           actionModal?.action === "reject" ? "Rejeter la demande" :
           actionModal?.action === "dispute" ? "Ouvrir un litige" :
+          actionModal?.action === "analyze" ? "Mettre en analyse" :
+          actionModal?.action === "resolve-dispute" ? "Résoudre le litige" :
           "Effectuer le paiement"
         }
         description={`Référence: ${actionModal?.claim.reference}`}
@@ -322,11 +415,22 @@ export function Claims() {
           <>
             <Button variant="ghost" onClick={() => { setActionModal(null); setActionComment(""); }}>Annuler</Button>
             <Button
-              variant={actionModal?.action === "reject" ? "danger" : "primary"}
-              loading={processClaim.isPending}
+              variant={actionModal?.action === "reject" || (actionModal?.action === "resolve-dispute" && resolveDisputeResolution === "rejected") ? "danger" : "primary"}
+              loading={processClaim.isPending || resolveDispute.isPending}
               onClick={() => {
                 if (actionModal) {
-                  processClaim.mutate({ id: actionModal.claim.id, action: actionModal.action, comment: actionComment });
+                  if (actionModal.action === "dispute") {
+                    disputeClaim.mutate({ id: actionModal.claim.id, reason: actionComment || "Litige ouvert" });
+                  } else if (actionModal.action === "resolve-dispute") {
+                    resolveDispute.mutate({
+                      id: actionModal.claim.id,
+                      resolution: resolveDisputeResolution,
+                      montantApprouve: resolveDisputeResolution === "approved" ? resolveDisputeAmount : undefined,
+                      notes: actionComment,
+                    });
+                  } else {
+                    processClaim.mutate({ id: actionModal.claim.id, action: actionModal.action, comment: actionComment });
+                  }
                   setActionModal(null);
                   setActionComment("");
                 }
@@ -338,19 +442,72 @@ export function Claims() {
         }
       >
         <div className="space-y-4">
-          <Alert variant={actionModal?.action === "reject" ? "error" : actionModal?.action === "dispute" ? "warning" : "info"}>
+          <Alert
+            variant={
+              actionModal?.action === "reject" ? "error" :
+              actionModal?.action === "dispute" ? "warning" :
+              actionModal?.action === "resolve-dispute" && resolveDisputeResolution === "rejected" ? "error" :
+              "info"
+            }
+          >
             {actionModal?.action === "approve" && "La demande sera validée et passera en statut 'Approuvée'."}
             {actionModal?.action === "reject" && "La demande sera rejetée. Veuillez préciser le motif."}
+            {actionModal?.action === "analyze" && "La demande sera mise en révision pour analyse complémentaire."}
             {actionModal?.action === "dispute" && "Un litige sera ouvert et nécessitera une revue manuelle."}
             {actionModal?.action === "pay" && "Le paiement sera déclenché et la demande passera en statut 'Payée'."}
+            {actionModal?.action === "resolve-dispute" && resolveDisputeResolution === "approved" && "Le litige sera résolu et la demande passera en statut 'Approuvée'."}
+            {actionModal?.action === "resolve-dispute" && resolveDisputeResolution === "rejected" && "Le litige sera résolu et la demande passera en statut 'Rejetée'."}
           </Alert>
-          <Textarea
-            label="Commentaire"
-            placeholder="Ajoutez un commentaire..."
-            rows={4}
-            value={actionComment}
-            onChange={(e) => setActionComment(e.target.value)}
-          />
+
+          {actionModal?.action === "resolve-dispute" && (
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant={resolveDisputeResolution === "approved" ? "primary" : "outline"}
+                onClick={() => setResolveDisputeResolution("approved")}
+                className="flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Approuver
+              </Button>
+              <Button
+                variant={resolveDisputeResolution === "rejected" ? "danger" : "outline"}
+                onClick={() => setResolveDisputeResolution("rejected")}
+                className="flex items-center justify-center gap-2"
+              >
+                <XCircle className="h-4 w-4" />
+                Rejeter
+              </Button>
+            </div>
+          )}
+
+          {actionModal?.action === "resolve-dispute" && resolveDisputeResolution === "approved" && (
+            <Input
+              label="Montant approuvé (€)"
+              type="number"
+              value={resolveDisputeAmount}
+              onChange={(e) => setResolveDisputeAmount(Number(e.target.value))}
+            />
+          )}
+
+          {actionModal?.action !== "resolve-dispute" && (
+            <Textarea
+              label="Commentaire"
+              placeholder="Ajoutez un commentaire..."
+              rows={4}
+              value={actionComment}
+              onChange={(e) => setActionComment(e.target.value)}
+            />
+          )}
+
+          {actionModal?.action === "resolve-dispute" && (
+            <Textarea
+              label="Commentaire"
+              placeholder="Ajoutez un commentaire..."
+              rows={3}
+              value={actionComment}
+              onChange={(e) => setActionComment(e.target.value)}
+            />
+          )}
         </div>
       </Modal>
     </div>

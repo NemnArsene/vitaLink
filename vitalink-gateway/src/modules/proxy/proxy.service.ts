@@ -86,48 +86,69 @@ export class ProxyService {
           data: options.body,
           params: options.params,
           headers,
+          validateStatus: () => true,
         }),
       );
 
-      return response.data as any;
+      if (response.status >= 400) {
+        this.logger.warn(
+          `Proxy ${options.method} ${target}${options.path} returned ${response.status}`,
+        );
+      }
+
+      return {
+        statusCode: response.status,
+        data: response.data,
+      };
     } catch (error: any) {
       this.logger.error(
         `Proxy ${options.method} ${target}${options.path} failed: ${error.message}`,
       );
-      throw error;
+      return {
+        statusCode: 502,
+        data: { success: false, message: `Downstream service unreachable: ${error.message}` },
+      };
     }
   }
 
-  // Convenience methods
+  // Convenience methods (return only data, for backward compat)
   async getHms(path: string, params?: Record<string, string>) {
-    return this.forwardRequest('hms', { method: 'GET', path, params, scope: 'scope:hospital' });
+    const r = await this.forwardRequest('hms', { method: 'GET', path, params, scope: 'scope:hospital' });
+    return r.data;
   }
 
   async postHms(path: string, body?: any) {
-    return this.forwardRequest('hms', { method: 'POST', path, body, scope: 'scope:hospital' });
+    const r = await this.forwardRequest('hms', { method: 'POST', path, body, scope: 'scope:hospital' });
+    return r.data;
   }
 
   async putHms(path: string, body?: any) {
-    return this.forwardRequest('hms', { method: 'PUT', path, body, scope: 'scope:hospital' });
+    const r = await this.forwardRequest('hms', { method: 'PUT', path, body, scope: 'scope:hospital' });
+    return r.data;
   }
 
   async deleteHms(path: string) {
-    return this.forwardRequest('hms', { method: 'DELETE', path, scope: 'scope:hospital' });
+    const r = await this.forwardRequest('hms', { method: 'DELETE', path, scope: 'scope:hospital' });
+    return r.data;
   }
 
   async getIms(path: string, params?: Record<string, string>) {
-    return this.forwardRequest('ims', { method: 'GET', path, params, scope: 'scope:insurance' });
+    const r = await this.forwardRequest('ims', { method: 'GET', path, params, scope: 'scope:insurance' });
+    return r.data;
   }
 
   async postIms(path: string, body?: any) {
-    return this.forwardRequest('ims', { method: 'POST', path, body, scope: 'scope:insurance' });
+    const r = await this.forwardRequest('ims', { method: 'POST', path, body, scope: 'scope:insurance' });
+    return r.data;
   }
 
   async putIms(path: string, body?: any) {
-    return this.forwardRequest('ims', { method: 'PUT', path, body, scope: 'scope:insurance' });
+    const r = await this.forwardRequest('ims', { method: 'PUT', path, body, scope: 'scope:insurance' });
+    return r.data;
   }
 
   async deleteIms(path: string) {
-    return this.forwardRequest('ims', { method: 'DELETE', path, scope: 'scope:insurance' });
+    const r = await this.forwardRequest('ims', { method: 'DELETE', path, scope: 'scope:insurance' });
+    return r.data;
   }
 }

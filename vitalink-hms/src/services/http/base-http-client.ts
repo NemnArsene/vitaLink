@@ -31,7 +31,7 @@ coreHttpClient.interceptors.request.use((config: InternalAxiosRequestConfig) => 
 coreHttpClient.interceptors.response.use(
   (res) => res,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !error.config?.url?.includes("/auth/")) {
       localStorage.removeItem("hms-auth");
       window.location.href = "/login";
     }

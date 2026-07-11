@@ -39,7 +39,7 @@ export class InsuranceClaim extends BaseSchema {
   @Prop({ default: 0 })
   montantApprouve: number;
 
-  @Prop({ default: 'recue', enum: ['recue', 'en_revision', 'approuvee', 'rejetee', 'remboursee'] })
+  @Prop({ default: 'recue', enum: ['recue', 'en_attente', 'en_revision', 'approuvee', 'rejetee', 'remboursee', 'litige'] })
   statut: string;
 
   @Prop()
@@ -49,7 +49,13 @@ export class InsuranceClaim extends BaseSchema {
   reviewedBy: string;
 
   @Prop()
-  rejectionReason: string;
+  rejectionReason?: string;
+
+  @Prop()
+  disputeReason: string;
+
+  @Prop()
+  insuranceCardNumber?: string;
 
   @Prop()
   notes: string;

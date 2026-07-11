@@ -15,11 +15,29 @@ export class InsuredsService {
   ) {}
 
   async create(dto: CreateInsuredDto): Promise<InsuredDocument> {
-    const insured = new this.insuredModel({
-      ...dto,
-      statut: 'actif',
+    const data: Record<string, any> = {
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      insuredNumber: dto.insuredNumber || `INS-${Date.now()}`,
+      policyNumber: dto.policyNumber || `POL-${Date.now()}`,
+      insuranceCardNumber: dto.insuranceCardNumber || `CARD-${Date.now()}`,
+      providerName: dto.providerName || 'En attente',
+      dateOfBirth: dto.dateOfBirth || dto.birthDate || null,
+      statut: dto.status === 'active' ? 'actif' : dto.status === 'suspended' ? 'suspendu' : dto.status === 'terminated' ? 'inactif' : 'actif',
       dateAffiliation: new Date(),
-    });
+    };
+    if (dto.email) data.email = dto.email;
+    if (dto.phone) data.phone = dto.phone;
+    if (dto.gender) data.gender = dto.gender;
+    if (dto.policyId) data.policyId = dto.policyId;
+    if (dto.insuranceCardNumber) data.insuranceCardNumber = dto.insuranceCardNumber;
+    if (dto.providerName) data.providerName = dto.providerName;
+    if (dto.relationToSubscriber) data.relationToSubscriber = dto.relationToSubscriber;
+    if (dto.dateFinCouverture) data.dateFinCouverture = dto.dateFinCouverture;
+    if (dto.address) {
+      data.address = { street: dto.address, city: dto.city || '', state: '', zipCode: dto.postalCode || '' };
+    }
+    const insured = new this.insuredModel(data);
     return insured.save();
   }
 
@@ -38,7 +56,24 @@ export class InsuredsService {
   }
 
   async update(id: string, dto: UpdateInsuredDto): Promise<InsuredDocument> {
-    const i = await this.insuredModel.findByIdAndUpdate(id, dto, { new: true }).exec();
+    const updateData: any = { ...dto };
+    if (dto.birthDate) updateData.dateOfBirth = dto.birthDate;
+    if (dto.status) updateData.statut = dto.status === 'active' ? 'actif' : dto.status === 'suspended' ? 'suspendu' : 'inactif';
+    if (dto.address || dto.city || dto.postalCode) {
+      updateData.address = {
+        street: dto.address || '',
+        city: dto.city || '',
+        state: '',
+        zipCode: dto.postalCode || '',
+      };
+    }
+    delete updateData.birthDate;
+    delete updateData.status;
+    delete updateData.city;
+    delete updateData.postalCode;
+    delete updateData.maritalStatus;
+    delete updateData.socialSecurityNumber;
+    const i = await this.insuredModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
     if (!i) throw new NotFoundException(`Insured with ID ${id} not found`);
     return i;
   }

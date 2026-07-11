@@ -451,6 +451,8 @@ export function generateClaims(insureds: Insured[], hospitals: Hospital[], count
       id: `RMB-${String(i + 1).padStart(5, "0")}`,
       reference: `REM-${faker.string.alphanumeric(10).toUpperCase()}`,
       insuredId: insured.id,
+      patientName: `${insured.firstName} ${insured.lastName}`,
+      invoiceNumber: `INV-2026-${String(i + 1).padStart(4, "0")}`,
       contractId: insured.contractId,
       hospitalId: hospital.id,
       submissionDate: submissionDate.toISOString(),

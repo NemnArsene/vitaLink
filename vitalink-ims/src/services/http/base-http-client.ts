@@ -23,13 +23,14 @@ coreHttpClient.interceptors.request.use((config: InternalAxiosRequestConfig) => 
       }
     } catch {}
   }
+  console.log(`[HTTP] ${config.method?.toUpperCase()} ${config.url}`, config.data);
   return config;
 });
 
 coreHttpClient.interceptors.response.use(
   (res) => res,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !error.config?.url?.includes("/auth/")) {
       localStorage.removeItem("medisure-auth");
       window.location.href = "/login";
     }

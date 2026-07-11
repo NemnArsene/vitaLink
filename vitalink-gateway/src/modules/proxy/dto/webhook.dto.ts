@@ -12,7 +12,7 @@ export class WebhookDto {
   source?: string;
 
   @ApiProperty()
-  data: any;
+  payload: any;
 
   @ApiPropertyOptional()
   @IsOptional()

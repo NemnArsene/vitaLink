@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsArray, ValidateNested } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNumber, IsOptional, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ActeDto {
@@ -19,7 +19,7 @@ class ActeDto {
   @IsNumber()
   montant: number;
 
-  @ApiProperty({ required: false })
+  @IsOptional()
   dateActe?: Date;
 }
 
@@ -53,4 +53,9 @@ export class CreateClaimDto {
   @ApiProperty()
   @IsNumber()
   montantTotal: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  insuranceCardNumber?: string;
 }

@@ -1,6 +1,8 @@
 // Currency & date utilities
-export const formatCurrency = (n: number, currency = "XOF") =>
-  new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n) + " " + currency;
+export const formatCurrency = (n: number | undefined | null, currency = "XOF") => {
+  if (n == null || isNaN(n)) return "0 " + currency;
+  return new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n) + " " + currency;
+};
 
 export const formatNumber = (n: number) =>
   new Intl.NumberFormat("fr-FR").format(n);

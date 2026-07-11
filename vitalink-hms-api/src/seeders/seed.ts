@@ -372,6 +372,23 @@ const PRESCRIPTIONS = [
   { patientMedicalRecordNumber: 'MRN-2026-0001', patientName: 'Amadou Diallo', doctorName: 'Dr. Amadou Diallo', diagnosis: 'Bilan annuel', prescriptionDate: new Date('2026-06-20'), isValid: true, medicaments: [{ medicament: 'Multivitamines', dosage: '1 comprimé', frequence: '1x/jour', duree: '30 jours' }] },
 ];
 
+const INSURANCE_COMPANIES = [
+  { name: 'NSIA Assurances', code: 'NSIA', apiEndpoint: 'https://api.nsia.cm/v1', contactEmail: 'partenaires@nsia.cm', contactPhone: '+237 670 00 10 01', status: 'ACTIVE' },
+  { name: 'Saham Assurance', code: 'SAHAM', apiEndpoint: 'https://api.saham.cm/v1', contactEmail: 'partenaires@saham.cm', contactPhone: '+237 670 00 10 02', status: 'ACTIVE' },
+  { name: 'Activa Assurances', code: 'ACTIVA', apiEndpoint: 'https://api.activa.cm/v1', contactEmail: 'partenaires@activa.cm', contactPhone: '+237 670 00 10 03', status: 'ACTIVE' },
+  { name: 'CNAMGS', code: 'CNAMGS', apiEndpoint: 'https://api.cnamgs.cm/v1', contactEmail: 'partenaires@cnamgs.cm', contactPhone: '+237 670 00 10 04', status: 'ACTIVE' },
+  { name: 'AXA Assurances', code: 'AXA', apiEndpoint: 'https://api.axa.cm/v1', contactEmail: 'partenaires@axa.cm', contactPhone: '+237 670 00 10 05', status: 'ACTIVE' },
+  { name: 'Ascoma', code: 'ASCOMA', apiEndpoint: 'https://api.ascoma.cm/v1', contactEmail: 'partenaires@ascoma.cm', contactPhone: '+237 670 00 10 06', status: 'INACTIVE' },
+];
+
+const INSURANCE_CONTRACTS = [
+  { contractNumber: 'CTR-NSIA-2026-001', companyCode: 'NSIA', startDate: new Date('2026-01-01'), endDate: new Date('2026-12-31'), coverageRate: 80, status: 'ACTIVE' },
+  { contractNumber: 'CTR-SAHAM-2026-001', companyCode: 'SAHAM', startDate: new Date('2026-03-01'), endDate: new Date('2027-02-28'), coverageRate: 75, status: 'ACTIVE' },
+  { contractNumber: 'CTR-ACTIVA-2026-001', companyCode: 'ACTIVA', startDate: new Date('2026-02-01'), endDate: new Date('2026-08-31'), coverageRate: 85, status: 'ACTIVE' },
+  { contractNumber: 'CTR-CNAMGS-2026-001', companyCode: 'CNAMGS', startDate: new Date('2026-01-01'), endDate: new Date('2026-06-30'), coverageRate: 90, status: 'EXPIRED' },
+  { contractNumber: 'CTR-AXA-2026-001', companyCode: 'AXA', startDate: new Date('2026-04-01'), endDate: new Date('2027-03-31'), coverageRate: 70, status: 'ACTIVE' },
+];
+
 const INVOICES = [
   {
     invoiceNumber: 'INV-2026-0001',
@@ -399,6 +416,8 @@ const INVOICES = [
     montantTotal: 45000,
     montantRembourse: 0,
     statut: 'soumise',
+    insuranceCardNumber: 'SAHAM-2026-001235',
+    insuranceProvider: 'Saham Assurance',
     insuranceClaimId: 'CLM-2026-0001',
     notes: 'Grossesse à suivi normal',
   },
@@ -415,6 +434,8 @@ const INVOICES = [
     montantTotal: 90000,
     montantRembourse: 0,
     statut: 'approuvee',
+    insuranceCardNumber: 'ACTIVA-2026-001236',
+    insuranceProvider: 'Activa Assurances',
     insuranceClaimId: 'CLM-2026-0002',
     processedAt: new Date('2026-06-12'),
     notes: 'Suivi HTA — contrôle cardiaque annuel',
@@ -431,6 +452,8 @@ const INVOICES = [
     montantTotal: 55000,
     montantRembourse: 44000,
     statut: 'payee',
+    insuranceCardNumber: 'NSIA-2026-001237',
+    insuranceProvider: 'NSIA Assurances',
     insuranceClaimId: 'CLM-2026-0003',
     processedAt: new Date('2026-06-18'),
     notes: 'Prise en charge validée par NSIA',
@@ -461,6 +484,8 @@ const INVOICES = [
     montantTotal: 95000,
     montantRembourse: 0,
     statut: 'soumise',
+    insuranceCardNumber: 'AXA-2026-002000',
+    insuranceProvider: 'AXA Assurances',
     insuranceClaimId: 'CLM-2026-0004',
     notes: 'Migraine chronique — IRM prescrite',
   },
@@ -477,6 +502,8 @@ const INVOICES = [
     montantTotal: 60000,
     montantRembourse: 0,
     statut: 'approuvee',
+    insuranceCardNumber: 'ASCOMA-2025-009999',
+    insuranceProvider: 'Ascoma',
     insuranceClaimId: 'CLM-2026-0005',
     processedAt: new Date('2026-06-09'),
     notes: 'HTA — bilan initial complet',
@@ -494,6 +521,8 @@ const INVOICES = [
     montantTotal: 60000,
     montantRembourse: 48000,
     statut: 'payee',
+    insuranceCardNumber: 'CNAMGS-2026-0006',
+    insuranceProvider: 'CNAMGS',
     insuranceClaimId: 'CLM-2026-0006',
     processedAt: new Date('2026-06-12'),
     notes: 'Bronchite aiguë — prise en charge CNAMGS',
@@ -510,6 +539,8 @@ const INVOICES = [
     montantTotal: 45000,
     montantRembourse: 0,
     statut: 'rejetee',
+    insuranceCardNumber: 'NSIA-2026-001239',
+    insuranceProvider: 'NSIA Assurances',
     insuranceClaimId: 'CLM-2026-0007',
     notes: 'Réclamation rejetée — dossier incomplet',
   },
@@ -526,6 +557,8 @@ const INVOICES = [
     montantTotal: 60000,
     montantRembourse: 54000,
     statut: 'remboursee',
+    insuranceCardNumber: 'SAHAM-2026-001240',
+    insuranceProvider: 'Saham Assurance',
     insuranceClaimId: 'CLM-2026-0008',
     processedAt: new Date('2026-06-22'),
     notes: 'Crise d\'asthme — remboursement Saham',
@@ -548,6 +581,8 @@ async function seed() {
     await db.dropCollection('webhook_events').catch(() => {});
     await db.dropCollection('consultations').catch(() => {});
     await db.dropCollection('prescriptions').catch(() => {});
+    await db.dropCollection('insurance_companies').catch(() => {});
+    await db.dropCollection('insurance_contracts').catch(() => {});
 
     // Seed personnel (users)
     const personnelWithDates = PERSONNEL.map((p) => ({
@@ -566,6 +601,28 @@ async function seed() {
     }));
     await db.collection('patients').insertMany(patientsWithDates);
     console.log(`✅ Seeded ${PATIENTS.length} patients`);
+
+    // Seed insurance companies
+    const companiesWithDates = INSURANCE_COMPANIES.map((c) => ({
+      ...c,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+    await db.collection('insurance_companies').insertMany(companiesWithDates);
+    console.log(`✅ Seeded ${INSURANCE_COMPANIES.length} insurance companies`);
+
+    // Seed insurance contracts with company references
+    const companies = await db.collection('insurance_companies').find().toArray();
+    const companyMap = new Map(companies.map((c: any) => [c.code, c._id]));
+    const contractsWithRefs = INSURANCE_CONTRACTS.map((ctr) => ({
+      ...ctr,
+      companyName: INSURANCE_COMPANIES.find((c) => c.code === ctr.companyCode)?.name,
+      companyId: companyMap.get(ctr.companyCode),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })).map(({ companyCode, ...rest }) => rest);
+    await db.collection('insurance_contracts').insertMany(contractsWithRefs);
+    console.log(`✅ Seeded ${INSURANCE_CONTRACTS.length} insurance contracts`);
 
     // Get patient IDs for references
     const patients = await db.collection('patients').find().toArray();
@@ -607,6 +664,8 @@ async function seed() {
     console.log(`   - ${CONSULTATIONS.length} consultations`);
     console.log(`   - ${PRESCRIPTIONS.length} prescriptions`);
     console.log(`   - ${INVOICES.length} invoices`);
+    console.log(`   - ${INSURANCE_COMPANIES.length} insurance companies`);
+    console.log(`   - ${INSURANCE_CONTRACTS.length} insurance contracts`);
   } catch (error) {
     console.error('❌ Seeding failed:', error);
     process.exit(1);

@@ -35,8 +35,8 @@ export class Insured extends BaseSchema {
     zipCode: string;
   };
 
-  @Prop({ type: Types.ObjectId, ref: 'Policy', required: true })
-  policyId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Policy' })
+  policyId?: Types.ObjectId;
 
   @Prop({ required: true })
   policyNumber: string;
